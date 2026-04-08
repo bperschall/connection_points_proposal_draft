@@ -48,9 +48,10 @@ conflate three fundamentally different concerns:
 - [Key questions and recommended approach](#key-questions-and-recommended-approach)
 - [Connection point domains](#connection-point-domains)
 - [Industry use cases](#industry-use-cases)
+- [Consumption workflows](#consumption-workflows)
 - [Data sourcing: CAD and PLM](#data-sourcing-cad-and-plm)
 - [Design principles and open questions](#design-principles-and-open-questions)
-- [Relationship to other proposals](#relationship-to-other-proposals)
+- [Relationship to other proposals and frameworks](#relationship-to-other-proposals-and-frameworks)
 - [Next steps](#next-steps)
 - [Appendix A: Current AIF naming conventions](#appendix-a-current-aif-naming-conventions)
 
@@ -327,26 +328,36 @@ high-voltage facility feeds to low-voltage equipment power cords.
 
 Airflow connection points define open-air boundaries where equipment draws in
 or expels air. Unlike piping connections that carry liquid through sealed
-interfaces, these define the physical locations and characteristics of vents on
-equipment surfaces. The precise location, area, and orientation are critical
-inputs for CFD simulations modeling facility-level airflow patterns, hot/cold
-aisle effectiveness, and equipment cooling performance.
+interfaces, these define the physical locations and characteristics of vent
+**zones** on equipment surfaces. The precise location, area, and orientation
+are critical inputs for CFD simulations modeling facility-level airflow
+patterns, hot/cold aisle effectiveness, and equipment cooling performance.
+
+A vent connection point represents an **aggregate vent zone** -- for example,
+the entire front intake grille of a CRAH, or the full rear exhaust panel of a
+compute rack -- not individual perforations or holes. A perforated panel with
+hundreds of small openings is a single connection point whose properties
+describe the zone's aggregate characteristics: total open area, obstruction
+factor, and effective airflow. This matches how CFD tools consume the data:
+each vent connection point maps to one boundary condition in the simulation
+mesh, not one boundary per perforation.
 
 | Property | Description | Example values |
 |---|---|---|
 | Direction | Air flows into or out of equipment | Intake, exhaust, bidirectional |
-| Vent area | Aggregate open area of the vent surface | 0.25 m&sup2;, 2.5 ft&sup2; |
-| Vent geometry | Shape of the vent opening | Rectangular, circular, perforated panel |
-| Airflow volume | Rated volumetric airflow | 500 CFM, 850 m&sup3;/h |
-| Static pressure | Pressure differential across the vent | 0.1" WG, 25 Pa |
+| Vent area | Aggregate open area of the entire vent zone | 0.25 m&sup2;, 2.5 ft&sup2; |
+| Vent geometry | Overall shape of the vent zone | Rectangular, circular, perforated panel |
+| Airflow volume | Rated volumetric airflow through the zone | 500 CFM, 850 m&sup3;/h |
+| Static pressure | Pressure differential across the vent zone | 0.1" WG, 25 Pa |
 | Temperature delta | Expected temperature rise or drop | +15 &deg;C (exhaust), ambient (intake) |
-| Equipment face | Which surface the vent is located on | Front, rear, top, side, bottom |
-| Obstruction factor | Reduction by grilles, filters, perforations | 60% open area, MERV-8 filter |
+| Equipment face | Which surface the vent zone is located on | Front, rear, top, side, bottom |
+| Obstruction factor | Effective open area ratio accounting for grilles, filters, and perforations | 60% open area, MERV-8 filter |
 
-With the Xform-based approach, each vent is an Xform oriented with the local
-Z-axis pointing in the airflow direction. The vent area, obstruction factor,
-and other engineering properties are typed properties directly available to
-CFD tools without geometry measurement or external lookup.
+With the Xform-based approach, each vent zone is an Xform positioned at the
+centroid of the vent area, oriented with the local Z-axis pointing in the
+airflow direction. The aggregate vent area, obstruction factor, and other
+engineering properties are typed properties directly available to CFD tools
+as boundary condition inputs without geometry measurement or external lookup.
 
 ### Network and data connections
 
@@ -362,8 +373,18 @@ one-to-one. A single physical OSFP port may support multiple logical
 configurations (e.g., 2x400G or 1x800G), and port naming must accommodate
 both the physical connector identity and the logical network identity.
 
+Beyond the physical connector standard, network connections benefit from
+classification by transport medium and functional role. A fiber BOM tool should
+not need to sift through copper management ports and industrial fieldbus
+connections to find compute fabric OSFP ports. Classification properties enable
+targeted discovery without requiring every tool to interpret every connector
+standard.
+
 | Property | Description | Example values |
 |---|---|---|
+| Medium | Physical transport medium | Fiber, copper, DAC, wireless |
+| Category | Functional classification | High-speed data, management, control/fieldbus, sensor, console |
+| Fabric role | Network fabric or subsystem served | Compute, storage, management, out-of-band |
 | Port type | Physical connector standard | OSFP, QSFP112, QSFP-DD, RJ45, LC fiber, M12 D-coded |
 | Pin count | Number of pins or conductors | 38-pin (OSFP), 8-pin (RJ45) |
 | Supported line rates | Data rates the port can operate at | 400GbE, 800GbE, 1GbE |
@@ -377,6 +398,22 @@ compute tray) and names scale with hierarchy: `<instantiation_name>_<port_name>`
 (e.g., `CT1_OSFP1`). Human-readable naming (e.g., `C1`-`C4` for compute
 network) serves a different purpose than physical port type naming (`OSFP1`,
 `ETH1`), and the schema should accommodate both.
+
+Example network connection point with classification properties:
+
+```
+def Xform "OSFP1" {
+    token connectionPoint:type = "network"
+    token connectionPoint:network:medium = "fiber"
+    token connectionPoint:network:category = "high_speed_data"
+    token connectionPoint:network:fabricRole = "compute"
+    token connectionPoint:portType = "OSFP"
+    token[] connectionPoint:supportedLineRates = ["400GbE", "800GbE"]
+    token[] connectionPoint:supportedConfigurations = ["1x800G", "2x400G"]
+    token[] connectionPoint:allowedTransceivers = ["DR4", "FR4", "LR4"]
+    bool connectionPoint:hotPlugCapable = true
+}
+```
 
 ### Mechanical connections
 
@@ -445,7 +482,7 @@ systems -- requires connection points for:
 - **Liquid cooling piping** -- FWS and TCS supply/return connections on CDUs,
   rear-door heat exchangers, and liquid-cooled rack manifolds. Each connection
   has specific pipe diameters, flow rates, temperatures, and pressures that
-  downstream thermal simulation runtimes (e.g., Cadence 6SigmaDCX) consume.
+  downstream thermal simulation runtimes (e.g., Cadence Reality DT) consume.
 - **Electrical power distribution** -- Power feeds from PDUs and RPPs to
   individual racks, with voltage, amperage, phase, and redundancy
   specifications that drive electrical load balancing and capacity planning.
@@ -466,70 +503,44 @@ metadata that simulation runtimes can consume directly.
 
 ### Visual Factory Intelligence (VFI)
 
-VFI extends digital twin capabilities to general manufacturing and industrial
-facilities:
-
-- **CNC machines and manufacturing cells** have connection points at multiple
-  levels: facility-level connections for coolant, compressed air, and
-  electrical power, and **machine-level tooling interfaces** such as spindles
-  accepting specific tool bit tapers (CAT40, BT30, HSK-A63). A spindle
-  connection point defines which cutting tools are compatible, constrained by
-  taper standard, maximum RPM, torque rating, and coolant-through capability.
-- **Conveyor systems** have mechanical mounting points with specific load
-  ratings and bolt patterns, drive motor electrical connections, and sensor/
-  network data connections for control system integration.
-- **HVAC and environmental systems** connect to ductwork, chilled water
-  piping, and electrical power. Air grille and exhaust hood locations are
-  airflow connection points that drive environmental CFD simulation.
-
-VFI use cases emphasize the need for **mechanical** connection points (mounting
-interfaces, structural supports) alongside thermal and electrical connections.
+Manufacturing facilities add **mechanical** connection points (CNC spindle
+tooling interfaces constrained by taper standard and RPM, conveyor mounting
+points with bolt patterns and load ratings) alongside thermal and electrical
+connections. HVAC air grilles and exhaust hoods are airflow connection points
+driving environmental CFD simulation.
 
 ### Robotics and autonomous systems
 
-Robot arms, humanoid robots, AMRs, and robotic workcells present rich
-connection point requirements spanning every domain:
-
-- **End-of-arm tooling (EOAT) interfaces** on a robot's wrist flange define
-  which grippers, welding torches, or inspection cameras can attach, governed
-  by bolt pattern (ISO 9409-1), payload capacity, and pneumatic/electrical
-  pass-through. Tool changers (ATI, Schunk) add their own mechanical,
-  pneumatic, and electrical interface specifications.
-- **Robot base mounting** involves mechanical connections to floor plates or
-  linear tracks with specific bolt patterns, load ratings, and vibration
-  isolation.
-- **Humanoid modular interfaces** -- Limb segments, hands, and sensor heads
-  attach through standardized interfaces with electrical and data
-  pass-through. Battery packs dock through connection points combining
-  electrical, mechanical, and data interfaces.
-- **AMR interfaces** -- Charging stations combine electrical, mechanical, and
-  data interfaces. Payload modules (conveyors, lifts, cobot arms) attach
-  through standardized top-plate connection points.
-
-Robotics highlights the need for **multi-domain connection points** -- a single
-physical interface carrying mechanical, electrical, pneumatic, and data
-connections simultaneously. It also demonstrates the importance of CAD and PLM
-sourcing: manufacturers define interface specs in CAD, and downstream
+Robotics highlights **multi-domain connection points** -- a robot wrist flange
+(ISO 9409-1) carries mechanical, pneumatic, and electrical interfaces
+simultaneously; tool changers (ATI, Schunk) add their own multi-domain specs.
+Humanoid robots attach modular limbs, hands, and battery packs through
+standardized connection points. AMRs use charging stations and payload module
+interfaces combining electrical, mechanical, and data connections. CAD and PLM
+sourcing is critical: manufacturers define interface specs in design files, and
 integrators need structured metadata to validate compatibility.
 
 ### Industrial equipment and process plants
 
-Process industries (oil & gas, chemical, pharmaceutical, food & beverage)
-have the most mature connection standards:
+Process industries have the most mature connection standards (ASME B16.5, DIN
+EN 1092, ISO 7005). Piping connections, instrumentation ports, and vessel
+nozzles carry complex properties (flange rating, projection length, process
+conditions) that demonstrate the need for **standards-based properties**
+referencing industry standards rather than arbitrary numeric values.
 
-- **Piping connections** follow standards (ASME B16.5, DIN EN 1092, ISO 7005)
-  with specific ratings, materials, and gasket requirements. Process plant
-  design tools (AVEVA E3D, Hexagon Smart 3D, Bentley OpenPlant) already model
-  these in detail.
-- **Instrumentation connections** (thermowell ports, pressure taps) combine
-  mechanical interfaces with process parameters.
-- **Vessel nozzles** on reactors, columns, and heat exchangers carry complex
-  properties: nozzle schedule, flange rating, projection length, and process
-  conditions.
+## Consumption workflows
 
-Process industry use cases demonstrate the need for **standards-based
-properties** that reference industry standards (ASME, ISO, DIN) rather than
-arbitrary numeric values.
+The industry use cases above describe *what* tools need from connection points.
+This section traces *how* representative tools query and consume the data,
+because the consumption pattern drives asset structuring decisions.
+
+| Workflow | How it queries | Key structuring requirement |
+|---|---|---|
+| **CFD thermal simulation** (e.g., Cadence Reality DT) | Traverses assets, filters by `connectionPoint:type` (thermal, airflow), reads engineering properties for boundary conditions | Metadata accessible **before loading payloads** -- argues for interface-layer placement per the reference-payload pattern |
+| **BOM generation / cable routing** | Filters by `connectionPoint:type == "network"`, then by `network:medium`, `network:category`, `network:fabricRole` for targeted cable schedules (fiber, copper, DAC) | Discoverable by broad type + filterable by classification without full scene traversal -- argues for scope prim + property namespace as complementary mechanisms |
+| **Connection compatibility validation** | Queries `connectionPoint:` properties on both sides of a proposed connection; applies compatibility rules (matching diameters, pressures, bolt patterns) | Structured, typed properties on both endpoints -- impossible with naming conventions alone |
+| **Cross-domain validation** ([TC.002](https://gitlab-master.nvidia.com/bperschall/aif_simready_migration_plan), [EL.004](https://gitlab-master.nvidia.com/bperschall/aif_simready_migration_plan)) | Correlates equipment-level metadata (e.g., "supports FWS cooling") with `connectionPoint:type` and `connectionPoint:system` on child prims | Property queries replace name-regex matching -- more robust, extensible, convention-independent |
+| **CAD export pipeline** | Exporter emits Xform at each connection feature with typed properties from design dimensions; PLM adds operating parameters in a composition layer | Low barrier -- no schema plugin, no geometry fabrication; partially populated connection points are valid |
 
 ## Data sourcing: CAD and PLM
 
@@ -639,6 +650,35 @@ for CAD exporters and PLM integrations to reverse-engineer.
    composition, namespaced properties, purpose-based visibility. A formal
    applied API schema is an optional future upgrade, not a prerequisite.
 
+### Alignment with Asset Structure Principles
+
+The [Principles of Scalable Asset Structure in OpenUSD](https://docs.omniverse.nvidia.com/usd/latest/learn-openusd/independent/asset-structure-principles.html)
+establishes patterns that connection points should build on. The consumption
+workflows above inform how each principle applies:
+
+| Principle | Connection Points Position |
+|---|---|
+| **Reference-Payload pattern** | Connection point metadata belongs in the lightweight interface layer, accessible before loading payloads. CFD tools and BOM generators need engineering parameters before any geometry is relevant. The existing `_ConnectionPoints.usd` sublayer already achieves this separation -- the vocabulary formalizes it. |
+| **`defaultPrim` and entrypoints** | The `ConnectionPoints` scope prim lives under the asset's `defaultPrim`, not alongside it. Tools discover it via a well-known child scope name under the asset root. |
+| **Model hierarchy and `kind`** | Connection points are sub-component detail, below the `component` kind boundary. They do not participate in `kind`-based traversal; they are found by descending into a known scope within a component. |
+| **Naming conventions** | The property namespace (`connectionPoint:thermal:flowRate`) uses only valid USD property name characters. Prim names for individual connection points follow the restricted character set from the principles document. The migration from current vendor-prefixed prim names (`vertiv_fws_supply_piping_connection_main`) to cleaner identifiers should reference these conventions. |
+
+**Discoverability** -- flagged by Steve Ghee at PTC as the most important
+aspect -- is served by two complementary mechanisms:
+
+1. **Scope prim discovery:** A tool can find all connection points on an asset
+   by looking for the well-known `ConnectionPoints` child scope under the
+   `defaultPrim`. This works for hierarchy-aware traversal.
+2. **Property namespace discovery:** A tool can query for any prim carrying
+   `connectionPoint:` properties, regardless of where it sits in the hierarchy.
+   This works for scene-wide queries across multiple assets.
+
+Both mechanisms should be available. The scope prim provides structural
+predictability; the property namespace provides flexibility for tools that
+need to search across entire facility scenes. Connection point metadata should
+be accessible before loading payloads, ensuring that lightweight discovery
+and planning tools do not require geometry loading.
+
 ### Open questions for discussion
 
 1. **Base vocabulary scope.** What belongs in the base `connectionPoint:`
@@ -673,10 +713,48 @@ for CAD exporters and PLM integrations to reverse-engineer.
 
 9. **Port naming and hierarchy.** How should physical port identity (e.g.,
    `OSFP1`) relate to logical network identity (e.g., `C1` for compute
-   network)? Should both live on the connection point, or should logical
-   identity be in a separate system model layer?
+   network)? Classification properties (`network:medium`, `network:category`,
+   `network:fabricRole`) partially bridge this gap by capturing functional
+   role, but the binding between a physical port and its logical network
+   identity may still belong in a separate system model layer.
 
-## Relationship to other proposals
+## Relationship to other proposals and frameworks
+
+### Alignment with SimReady Foundation
+
+The [SimReady Foundation](https://github.com/NVIDIA/simready-foundation) defines
+a layered hierarchy for simulation content specifications:
+
+```
+Requirement -> Capability -> Feature -> Profile
+```
+
+Connection point requirements map into this model as follows:
+
+| Foundation Layer | Connection Points Mapping |
+|---|---|
+| **Capability** | "AIF Connection Points" (`CP` code prefix) -- a new capability under `capabilities/aif/connection_points/` grouping all connection-point-specific requirements |
+| **Features** | Domain-based features consuming CP requirements: `FET201_AIF_NEUTRAL` (Connection Points), with downstream features for Thermal Cooling (`FET202`) and Electrical (`FET203`) that include cross-domain connection point checks |
+| **Profiles** | Equipment-class profiles (AIF-CDU-Neutral, AIF-CRAH-Neutral, AIF-UPS-Neutral, AIF-Rack-Neutral) select the domain features relevant to each equipment type |
+
+The current AIF naming conventions represent **tier 1** (vendor-scoped) in the
+SimReady positioning narrative. This proposal advances connection points to
+**structured tier 1** -- namespaced, typed, validatable -- with a clear upgrade
+path to **tier 3** (AOUSD-ratified schema) if adoption warrants formalization
+as an applied API schema.
+
+The [AIF-to-SimReady Foundation migration](https://gitlab-master.nvidia.com/bperschall/aif_simready_migration_plan)
+formalizes current connection point conventions as v0.1.0 requirements
+(CP.001-CP.006) within the Foundation model. This proposal defines the v0.2.0
+evolution of those requirements -- replacing geometry prims with Xforms and
+naming conventions with typed properties, while preserving the Foundation
+scaffolding (FET201, profiles, validation infrastructure) that the migration
+establishes.
+
+> **Note:** SimReady FAQ Q8 Path 2 step 5 currently says: "Define facility
+> connection interfaces using named geometry prims." This proposal argues for
+> Xform prims with typed properties instead. The FAQ will need to be updated
+> when this work lands.
 
 ### Alignment with "Separation of Concerns for Identifiers in USD"
 
@@ -694,14 +772,40 @@ metadata.
 The proposals are complementary, not competing. A connection point prim needs
 both **source identity** (Luk's concern -- CAD feature ID, PLM part number)
 and **domain properties** (this proposal's concern -- type, direction,
-engineering parameters). If both converge on namespaced properties, they share
-a common pattern: `sourceId:` for external identifiers, `connectionPoint:` for
-domain properties, coexisting on the same prim with the same composition
-semantics and discoverability conventions.
+engineering parameters). Both namespaces coexist on the same Xform prim,
+compose independently through USD's layer stack, and are discoverable through
+namespace-based queries:
 
-This alignment should be explored as both proposals progress. A joint
-vocabulary specification could serve as the foundation for both -- and for
-future proposals that need to attach domain-specific metadata to USD prims.
+```
+def Xform "fws_supply_main" {
+    # Source identity (per identifier separation of concerns proposal)
+    string sourceId:cadFeatureId = "FEAT-00472"
+    string sourceId:plmPartNumber = "VRT-CDU-FWS-SUP-4IN"
+    string sourceId:cadSystem = "SolidWorks"
+
+    # Connection point domain properties (this proposal)
+    token connectionPoint:type = "thermal"
+    token connectionPoint:direction = "supply"
+    token connectionPoint:system = "FWS"
+    float connectionPoint:portDiameter = 0.1016
+    float connectionPoint:matingDepth = 0.05
+    float connectionPoint:designFlowRate = 6.3
+    token connectionPoint:fluidType = "water"
+    token connectionPoint:disconnectType = "flanged"
+    token connectionPoint:flangeRating = "ANSI_150"
+}
+```
+
+In this model, a CAD exporter authors `sourceId:` properties (tracing back to
+the design feature) and spatial properties (`connectionPoint:portDiameter`
+from the design geometry). A PLM integration adds operating parameters
+(`connectionPoint:designFlowRate`, `connectionPoint:flangeRating`) in a
+stronger composition layer. Both namespaces compose independently and are
+queryable by any tool that understands the namespace convention.
+
+A joint vocabulary specification covering both `sourceId:` and
+`connectionPoint:` namespaces would demonstrate that this pattern generalizes
+to any domain-specific metadata that needs to attach to USD prims.
 
 ### Other related efforts
 
@@ -710,7 +814,10 @@ future proposals that need to attach domain-specific metadata to USD prims.
   (not duplicating) SimReady metadata.
 - **Asset Validation Framework** -- Enables validation rules for connection
   point completeness, property ranges, and compatibility without a formal
-  schema plugin.
+  schema plugin. The AIF-to-SimReady migration already defines cross-domain
+  validators (TC.002, EL.004) that check metadata-to-connection-point
+  consistency; the `connectionPoint:` property namespace would make these
+  checks more robust by replacing name-pattern matching with property queries.
 - **USD Physics Schema** -- Demonstrates the pattern of applied API schemas
   (`PhysicsRigidBodyAPI`, `PhysicsCollisionAPI`) for simulation-relevant
   metadata. If the connection point vocabulary matures to warrant
@@ -718,49 +825,53 @@ future proposals that need to attach domain-specific metadata to USD prims.
 
 ## Next steps
 
-1. **Align on the problem statement.** Circulate among AIFDT, VFI, and
-   Robotics stakeholders to confirm that the separation of concerns and five
-   connection domains resonate across industries.
+1. **Land the v0.1.0 Foundation baseline.** The
+   [AIF-to-SimReady Foundation migration](https://gitlab-master.nvidia.com/bperschall/aif_simready_migration_plan)
+   formalizes current connection point conventions (CP.001-CP.006) into the
+   Foundation's Requirements/Capabilities/Features/Profiles model. This
+   establishes the scaffolding (FET201, profiles, validation infrastructure)
+   that the vocabulary specification will evolve.
 2. **Coordinate with the Identifiers proposal.** Explore a joint vocabulary
    specification for namespaced property conventions with Aaron Luk and TAC
    stakeholders.
-3. **Inventory existing implementations.** Document connection point
-   conventions across AIF (Vertiv, GB300), VFI factory equipment, and robotic
-   workcells.
-4. **Draft the vocabulary specification.** Define the `connectionPoint:`
-   namespace, property names/types/allowed values per domain. This
-   specification is the primary deliverable.
-5. **Prototype with AIF assets.** Using existing GB300/Vertiv connection point
-   layers, validate that CAD export, PLM integration, simulation consumption,
-   and asset validation all work with the vocabulary-based representation.
-6. **Define migration path.** Incremental adoption alongside existing naming
-   conventions, then deprecation once tooling has migrated.
+3. **Draft the vocabulary specification.** Define the `connectionPoint:`
+   namespace: property names, types, allowed values, and domain-specific
+   prefixes. Start with thermal and electrical domains where real AIF assets
+   and active partner engagement (Cadence Reality DT, PTC) provide immediate
+   validation.
+4. **Prototype with partner tools.** Two proof-of-concept tracks:
+   - **Cadence Reality DT consumption:** Author existing Vertiv/CRAH connection
+     point data as Xform + `connectionPoint:` properties; demonstrate direct
+     consumption by CFD simulation without external lookup tables.
+   - **PTC CAD export:** Demonstrate PTC's SPT tools emitting Xform-based
+     connection points with typed properties from CAD design features (starting
+     with an RJ45 network port connection point).
+5. **Publish the vocabulary specification.** Move to a public venue (GitHub
+   Issue/PR on [NVIDIA/simready-foundation](https://github.com/NVIDIA/simready-foundation)
+   or [OpenUSD-proposals](https://github.com/PixarAnimationStudios/OpenUSD-proposals))
+   for external review and partner engagement.
+6. **Evolve FET201 to v0.2.0.** Update connection point requirements from
+   naming-convention-based (v0.1.0) to property-based (v0.2.0). New validators
+   query `connectionPoint:` properties. Migration tooling converts existing
+   assets. v0.1.0 requirements remain valid during transition.
 7. **Evaluate schema promotion criteria.** Define conditions under which the
    vocabulary should be promoted to a formal applied API schema.
-8. **Draft a solution proposal.** Concrete proposal based on alignment from
-   steps 1-7.
 
 ---
 
 ## Appendix A: Current AIF naming conventions
 
+Representative examples of the naming convention currently in use (see the
+[full proposal](AIF_Connection_Points_Proposal.md#appendix-a-current-aif-connection-point-naming-conventions)
+for the complete table):
+
 | Connection point type | USD prim naming convention | Example |
 |---|---|---|
-| Generic liquid intake pipe | `<vendor>_liq_supply_` | `vertiv_liq_supply_primary_01` |
-| Generic liquid outflow pipe | `<vendor>_liq_return_` | `trane_liq_return_secondary` |
 | FWS supply pipe | `<vendor>_fws_supply_piping_connection_` | `vertiv_fws_supply_piping_connection_main` |
-| FWS return pipe | `<vendor>_fws_return_piping_connection_` | `vertiv_fws_return_piping_connection_main` |
-| TCS supply pipe | `<vendor>_tcs_supply_piping_connection_` | `vertiv_tcs_supply_piping_connection_main` |
-| TCS return pipe | `<vendor>_tcs_return_piping_connection_` | `vertiv_tcs_return_piping_connection_main` |
 | Electrical power socket | `<vendor>_electrical_nominal_voltage_` | `trane_electrical_nominal_voltage_main` |
 | Airflow intake vent | `<vendor>_airvent_intake_` | `trane_airvent_intake_frontplate` |
-| Airflow outflow vent | `<vendor>_airvent_outflow_` | `trane_airvent_outflow_cabinet_top` |
 
-All connection point prims:
-
-- Reside under a `ConnectionPoints` scope prim.
-- Are set to `guide` purpose (not rendered visually).
-- Use simple mesh geometry (planes for rectangular, disks for circular
-  openings) sized and positioned to match the physical interface.
-- Are authored in a separate `<AssetName>_ConnectionPoints.usd` layer file
-  composed into the main asset via sublayering.
+All connection point prims reside under a `ConnectionPoints` scope prim, are
+set to `guide` purpose, use simple mesh geometry, and are authored in a
+separate `<AssetName>_ConnectionPoints.usd` layer file composed via
+sublayering.
