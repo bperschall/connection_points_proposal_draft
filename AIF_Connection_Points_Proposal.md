@@ -2,7 +2,8 @@
 
 Copyright &copy; 2026, NVIDIA Corporation, version 0.1 (DRAFT)
 
-Beau Perschall
+Beau Perschall (NVIDIA)
+Steve Ghee (PTC)
 
 > **See also:** A concise version of this document
 > ([AIF_Connection_Points_Proposal_Concise.md](AIF_Connection_Points_Proposal_Concise.md))
@@ -67,7 +68,18 @@ bits, a robotic wrist flange that defines which grippers can attach, and a
 coolant pipe fitting on a CDU are all connection points: physical interfaces
 with position, orientation, identity, and compatibility constraints.
 
-Today, connection points in USD are represented as geometry prims (planes and
+[*steve*] Missing here is this secondary defintion of connection points where simready
+defines a physical interface as an alternative representation for example a large rectangle on the 
+fornt of the GB300 wihch represents the nomnial airflow through the front of the rack. It is 
+a physical interface between the machine and the environment; it is implicitly connected by virtue
+of putting the machine in a room and turning it on - air flows, ideally at the stated nomonal rate, 
+temperature etc. I guess the real question is this a "connection point"?  it's not exactly a point 
+(it's typically a finite area) and it technically isnt really a connection as such...  I 
+guess this is where I've suggested in the past (i think others have too) a different term ; "interfaces" is a little more general purpose.  
+Should this be introduced here?  Just a thought.
+[*steve*]
+
+Today, connection points in NVIDIA's SimReady USD are represented as geometry prims (planes and
 disks) with naming conventions that encode connection type, vendor, and
 directionality into the prim name itself. This conflates three fundamentally
 different concerns: **spatial position and orientation** (where the connection
@@ -115,6 +127,17 @@ a connection point:
 - **Datacenter cooling equipment** (CDUs, CRAHs, rear-door heat exchangers)
   connects to facility water supply and return piping, with specific flow
   rates, temperatures, and pressures.
+  
+[*steve] Note here that the standard description provided above (connecting 
+piping for fluid supply & return sits within **process plant equipmement** (below)) 
+because that's what CDUs, CRAHs are - they are heat exchangers / industrial 
+process plant equipment.  Perhaps a better use of this category is to describe the 
+environmental connection point scenario e.g. the interface of a CRAH (itself a piece 
+of industrial eqipment attached to the cooling subsystem) which also has this physical 
+interface to the environment i.e. the air flow into and return from the physical room 
+(white) space.  This is a very specific defintion of connection/interface which is not covered in 
+the other examples.[/steve*]
+
 - **Electrical distribution equipment** (PDUs, RPPs, UPS systems, busways)
   connects to facility power with specific voltages, amperages, phases, and
   connector types.
@@ -133,9 +156,22 @@ a connection point:
   end-of-arm tools (grippers, welding torches, inspection cameras) can
   attach, governed by bolt pattern, payload capacity, pneumatic/electrical
   pass-through, and tool changer standard.
+  
+[*steve] the robotic and manufacturing equipment are basically identical - a 
+  robot is manufacturing equipment,a CNC machine is a robot.[/steve*]
+  
 - **Modular industrial accessories** -- Vision systems mount to brackets with
   specific bolt patterns, sensors dock to standardized ports, and conveyor
   modules join through mechanical and electrical quick-connect interfaces.
+- [*steve] **Network/Computing equipment** We've recently had that discussion 
+with SPT over the idea that the various network connection ports e.g. on the 
+front of a GB300, that these are also connection points, on the rear is the NVLink 
+spine; along with the mechanical definition of how the plug and socket function (insertion 
+force, key vector etc.) there's also the logical and operational description of data, 
+current/voltage rating, and then the operational information about what protocol, what 
+system port address etc. For computing (and networking) equipment, you've also got the 
+physical mounting connection points e.g. rack mount slide trays, lock down bolts etc., 
+thought these may fall under *Modular Industrial Accessories*.[/steve*]
 
 In all these cases, a connection point carries information that spans three
 distinct concerns -- and conflating them creates problems for simulation,
@@ -163,7 +199,7 @@ point carries information across three fundamental concerns:
 | **Representation** | Xform transform: position (translation) + full orientation (rotation), with a standard axis convention for connection direction and keying | Connection type, flow direction, system membership, tooling standard | Flow rate, temperature, pressure, voltage, amperage, port diameter, flange rating, taper type, payload capacity, mating depth, service clearance, etc. |
 | **Consumed by** | Spatial queries, routing algorithms, clearance checks, tool change simulation | Discovery, BOM generation, compatibility matching, connection validation, tooling selection | Simulation runtimes, engineering analysis, regulatory compliance, interchangeability verification |
 | **Variability** | Changes per equipment instance and placement | Relatively stable across instances of the same equipment type | May vary by configuration, operating mode, or site-specific requirements |
-| **Current location** | Geometry prims (planes, disks) in a ConnectionPoints layer | Encoded in prim naming conventions | Scattered across `customData`, SimReady metadata, or absent entirely |
+| **Currently defined as** | Geometry prims (planes, disks) in a ConnectionPoints layer | Encoded in prim naming conventions | Scattered across `customData`, SimReady metadata, or absent entirely |
 
 Today, there is no standardized representation in USD for connection points.
 The first column (position and orientation) is captured indirectly through
@@ -194,6 +230,14 @@ five primary domains, each with its own set of engineering properties:
    interfaces carrying bolt pattern, load rating, interface standard, and
    compatible accessories.
 
+[*steve] I think you can argue that thermal cooling - typically liquid-based - is 
+one example of a generalised Computational Fluid Dynmaics solution, and Airflow/ventilation 
+(air/gas based) is another. You could merge Fluid and Air/Gas into one category. In PTCs 
+classification model, we'd probably have a top level classification as 'energy transfer' 
+for the common stuff (pressure etc.), and then separate fluid and gas specifics as sub-classification. 
+Network and Data could probably be generalised to '(Digital) Data' - there are likely many sub-classes.
+[/steve*]
+
 These five domains are not mutually exclusive -- a single physical interface
 may span multiple domains (e.g., a CNC spindle is both a mechanical tooling
 connection and a coolant-through thermal connection; a network port has
@@ -211,7 +255,7 @@ Without a clear separation of concerns for connection points:
 1. **Manual authoring does not scale.** The current workflow requires a human
    to manually create geometry prims, name them according to convention, and
    position them precisely. This process cannot be automated from CAD source
-   data without a structured schema that CAD export tools and PLM integrations
+   data without a structured schema that Engineeering Design and Enterprise Information integrations 
    can target. Design revisions require manual re-authoring rather than
    parametric propagation.
 
@@ -281,7 +325,7 @@ prim). But this conflates two distinct concerns:
   compatibility and spatial clearance.
 
 These are different concerns consumed by different tools. A clearance checker
-needs a port diameter value, not a mesh to measure. A routing algorithm needs
+needs a port diameter and tolerance values, not a mesh to measure. A routing algorithm needs
 an engagement depth, not a polygon count. Expressing spatial extents as
 **typed metadata properties** rather than inferring them from geometry is
 itself a separation of concerns:
@@ -293,11 +337,25 @@ itself a separation of concerns:
 | Service clearance envelope | `connectionPoint:serviceClearance` | Facility layout, maintenance access planning |
 | Bolt pattern extent | `connectionPoint:boltPatternPCD`, `connectionPoint:boltCount` | Mounting compatibility, structural analysis |
 
+[*steve] you'll also likely need any torque/tightening information, tolerance information - these would typically be specified 
+with the bolts. Note that different simulations would care for different information - the core fluid simulation might only care 
+for the center connection axis along which the fluid flows, and the pipe radius. The connection may be more concerned with the flange 
+radius and any surface finiah / tolerancing information.  A mechanical structure will more likely care about the bolts/pattern and the 
+intermediate mating surface - bolt patterns might be something that could be described parametrically e.g. N bolts on a 
+circle centered here, but tat is limiting so you might also find that the best defintion you will get would be N bolts each as a connection point; 
+in most cases, the bolts would share many properties e.g. torque values, and these would be described on a shared component (class) 
+and instances of this bolt would define different locational values.  
+MBD (Model Based Design) is a technique used in mechanical engineering. [/steve*]
+
 This means the canonical connection point prim can be an **Xform** -- not a
 mesh. The Xform's transform captures position and full orientation (including
 keying), and namespaced properties capture the spatial extents, semantic
 identity, and domain-specific engineering parameters. No geometry is required
 from CAD export or PLM integration.
+
+[*steve] I think its worth pointing out that geometry *is* allowed - it might be useful to include as a visual aid. It should be defined as ```purpose="guide"```.  It is not mandatory.
+Where geometry might be valuable is when the interface/connection genuinely is a finite surface e.f. hot air flow out of the back of the GB200.  WHilst a genral purpose solution could describe this in metadata a,g,width/height relative to the coordinate system, that only really works for simple shapes; if it were a curved surface, that gets complicated.   
+[/steve*]
 
 The community should adopt a **standard axis convention** for connection point
 Xforms (analogous to how ISO 9409-1 defines a tool flange coordinate system
@@ -317,14 +375,15 @@ expressed as an applied API schema on the Xform prim, as structured metadata
 (e.g., a well-known `customData` dictionary), or as simple property namespaces
 on the prim?
 
-The answer should be guided by what CAD export tools can realistically produce.
-A CAD tool that identifies a pipe nozzle during export can readily emit an
-Xform at the nozzle location with properties like `connectionPoint:type` and
-`connectionPoint:portDiameter`. Requiring that tool to fabricate geometry
-(what shape? what tessellation?) or instantiate a registered applied API schema
-is a significantly higher bar. The representation should be something that CAD
-tools can emit simply, PLM integrations can augment afterward, and downstream
-consumers can discover reliably.
+[*input from steve] USD semantic labels API provides a valuable and usable middle ground, allowing
+conversion utilities to semantically identify (classify) prims as being connnection points.
+This is important for first pass "discovery" (as assets are loaded, for example) so that capabilities such 
+as connection points can be determined easily. Once these items are identified at the top level,
+we can learn more about the items from any assigned properties.  Information such as direction can 
+be defined within the Xform itself (you use Z-axis above) though arguably you sometimes need to separate 
+the connection "mating" information (xform) from the direction that (say) the fluid flows through a connected 
+structure.  Flow direction might therefore a separate (domain-specific) attribute - see below.  After identifying
+the connection points through semantic labeling, the properies can be defined using property namespaces.[/steve*]
 
 ### Domain-specific schemas vs. a unified connection model
 
@@ -366,6 +425,10 @@ tools that consume the structured metadata?
 Embedding compatibility in the schema makes validation portable and
 self-describing. Delegating to external tools provides more flexibility but
 fragments the logic across implementations.
+
+[*input from steve] i guess you can consider validation as one "sim" type, so 
+it might have certain (optional) data for that type. [/steve*]  
+
 
 ### Representation approaches: a spectrum
 
@@ -454,7 +517,36 @@ convention). No built-in validation of which keys are expected for a given
 connection type. Still convention-based, just with stronger typing than
 `customData`.
 
-**Approach 3: Applied API schema**
+[*steve*]
+**Approach 3: Semantic Labels and Namespaced properties on the prim**
+
+```
+def Xform "fws_supply_main" (
+  apiSchemas = ["SemanticsLabelsAPI:category","SemanticsLabelsAPI:type"]
+) {
+
+    token[] semantics:labels:category = ["aif","thermal","connectionpoint"]
+    token[] semantics:labels:type     = ["FWS","supply"]
+
+    float connectionPoint:portDiameter = 0.1016
+    float connectionPoint:matingDepth = 0.05
+    float connectionPoint:designFlowRate = 6.3
+}
+```
+
+*Strengths:* Discoverability. semantic label Schema-aware tools can enumerate all 
+connection points on a stage. Leverages existing USD semantic labels, so there are 
+APIs available.  Codegen provides typed accessors in C++ and Python.  USD sematic 
+labels allow for multiple values - an array of tokens - and this can be used to model 
+a simple hierarchical model (see above) for both category (this is an aif thermal 
+connection point) and type.  Category  and type information can be derived from CAD 
+annotation (MBD, properties) or PLM classification information.
+
+*Weaknesses:* Doesn't solve all the namespace issues. Clearly needs some work done come up with a taxonomy for the semantic labels
+
+[*steve*]
+
+**Approach 4: Applied API schema**
 
 A formal applied API schema (e.g., `ConnectionPointAPI`) defines the
 properties, their types, and their defaults in a schema definition. Tools
@@ -475,16 +567,17 @@ redistribution.
 **Recommended path: start simple, formalize later**
 
 The practical reality of CAD-to-USD pipelines argues for starting with
-**Approach 2 (namespaced properties on Xform prims)** as the near-term target:
+**Approach 3 (Semantic Labels and Namespaced properties on the prim)** as the near-term target:
 
 - CAD export tools emit an **Xform** at the location of each identified
   connection feature (pipe nozzle, flange, port cutout, vent opening), with
   the transform oriented per the standard axis convention. No geometry needs
-  to be fabricated -- the tool writes `connectionPoint:type = "thermal"`,
+  to be fabricated -- the tool writes `semantics:labels:category = ["aif","thermal","connectionpoint"]`, 
+  `semantics:labels:type = ["FWS","supply"]`
   `connectionPoint:portDiameter = 0.1016`, and other properties it knows
   directly from the design feature. This is simpler than emitting a mesh prim
   and no harder than writing any other USD property.
-- PLM integration adds more properties in a composition layer:
+- PLM integration may also specify properties in a composition layer:
   `connectionPoint:designFlowRate`, `connectionPoint:allowedFluids`, etc.
   These override or augment the CAD-authored properties through normal USD
   composition.
@@ -509,6 +602,16 @@ captures position and orientation (including keying), namespaced properties
 capture spatial extents, semantic identity, and domain-specific engineering
 parameters, and no visual geometry is required. Each concern is independently
 authorable, queryable, and consumable.
+
+[*steve*]Note my rationale here is that at the simplest level, a CAD only solution 
+(at least a decent cad tool!) will allow part and potentially surface/feature level 
+attributes, meaning you can define "connection point", "thermal" etc in the cad model
+ANother cad system might support a more structure Model Based Definition (MBD) approach 
+which uses more graphical approaches to thism but the end result is the same; the features 
+of the model are decorated with semantic information whcih can be processed into USD. If you 
+are using a PLM system, you might choose to do the classification in the PLM, not in 
+the CAD.  And both should be optional, e.g. if you have neither, you can always edit the layer 
+information yourself; it is simple semantic text [*/steve*]
 
 ## Existing mechanisms and practices
 
@@ -723,6 +826,11 @@ and names scale with hierarchy: `<instantiation_name>_<port_name>` (e.g.,
 physical port type naming (`OSFP1`, `QSFP1`, `ETH1`), and the schema should
 accommodate both.
 
+[*steve] Isn't there another challenge with ports which is that there's the logical systems address 
+from the application/OS perspective, and there's the phsyical location of the port e.g. rack 4, tray 3, 
+second port from the left ... This is actually a good example of the multiple concurrent identities we've 
+been talking about with ALuk; different usecases need different identities [/steve*]
+
 Example network connection point with classification properties:
 
 ```
@@ -784,6 +892,14 @@ across domain-specific schemas.
 | Shock and vibration | Maximum shock and vibration the connection can withstand | Power, coolant, network, mechanical |
 | Material | Housing, contact, and seal materials | All domains |
 
+[*steve] maybe its just me, but "mating depth" seems be a bit confusing - might be my understading of the term "mating" - perhaps 
+"insertion depth" is a better description. Goes with insertion force etc.  Note also that any material characteristics could be assigned to multuple items e.g. two connected pipes with a 
+sealant gasket or similar that sits between; along with material for the gasket, you will typically have information about
+lifecycle e.g. is it mandatory replacement on service etc. As you point out, the connection housing, connectors (could be 
+electrical pins), any ancillary sealant, you may need to specify mutiple properties on these. Options are that you break 
+down the 3d model into componen tparts, or you handle it through hierarchical classification and associated semantic tagging 
+and domain-specific properties [/steve*]
+
 Note that **location and orientation** are no longer listed as metadata
 properties -- they are intrinsic to the Xform's transform. This is a clean
 separation: the Xform prim captures *where* and *which direction*, while the
@@ -794,8 +910,8 @@ determine a port diameter, or a plane's width to determine a vent area) are
 now explicit, typed, queryable properties -- reinforcing the separation of
 concerns between visual representation and engineering metadata.
 
-These cross-cutting properties argue strongly for a base `connectionPoint:`
-property namespace that captures the shared physical interface characteristics,
+These cross-cutting properties argue strongly for a base `semantics:labels:category = ["connectionPoint"]`
+along with a `connectionPoint:` property namespace that captures the shared physical interface characteristics,
 with domain-specific prefixes (e.g., `connectionPoint:thermal:`,
 `connectionPoint:electrical:`) adding their own properties. If the community
 later adopts a formal applied API schema, these cross-cutting properties map
@@ -835,6 +951,11 @@ systems -- requires connection points for:
   area, airflow volume, temperature delta, and equipment face -- properties
   that CFD simulation tools consume directly to model hot/cold aisle
   effectiveness, recirculation risks, and facility-level thermal performance.
+
+[*steve] as mentioned before, there's a strong aguument that some of the AIF connection
+points are no different to that of Industrial Machinery, as the cooling, power and other equipement 
+types in an AI Factory are just industrial machines.  I suspect the same person who installs a CDU in an 
+AI Factory will install an AC into a factory. [/steve*]
 
 The current AIF workflow manually creates these as geometry prims with naming
 conventions, but the target state is automated extraction from CAD source data
@@ -974,7 +1095,7 @@ perforations). Each thermal piping connection point provides the inlet/outlet
 conditions for a fluid circuit.
 
 The tool traverses the asset hierarchy, queries connection point Xforms by
-`connectionPoint:type` (thermal, airflow), reads the typed properties, and
+`semantics:labels:category = ["thermal","connectionPoint"]` (thermal/airflow), reads the typed properties, and
 feeds them into its boundary condition setup. It does not need the equipment's
 visual geometry at this stage -- it needs engineering parameters for boundary
 condition definition before any mesh is relevant.
@@ -995,16 +1116,16 @@ and the tool must efficiently filter the full population without traversing
 every prim in the scene graph:
 
 - **Fiber BOM** (compute/storage fabric): Filters by
-  `connectionPoint:type == "network"` and
-  `connectionPoint:network:medium == "fiber"`, reads `portType` and
+  `semantics:labels:category = ["network","connectionPoint"]`
+  `semantics:labels:type = ["fiber"]`, reads `portType` and
   `allowedTransceivers`, and generates point-to-point cable schedules with
   length optimization based on physical coordinates.
 - **Copper patch schedule** (management network): Filters by
-  `connectionPoint:network:category == "management"` and
-  `connectionPoint:network:medium == "copper"`, generates copper cable runs
+  `semantics:labels:category = ["network","management","connectionPoint"]`
+  `semantics:labels:type = ["copper"]`, generates copper cable runs
   with category requirements (Cat6a, Cat6).
 - **DAC cable schedule** (short-reach fabric): Filters by
-  `connectionPoint:network:medium == "DAC"`, generates direct-attach copper
+  `semantics:labels:type = ["DAC"]`, generates direct-attach copper
   cable lists with length constraints.
 
 In all cases, the tool expects connection points at a specific depth in the
@@ -1012,12 +1133,11 @@ In all cases, the tool expects connection points at a specific depth in the
 cable length calculations.
 
 **Key requirement:** Connection points must be discoverable by broad type
-(`connectionPoint:type == "network"`) and further filterable by medium,
+(`semantics:labels:category = ["network","connectionPoint"]`) and further filterable by medium,
 category, and fabric role without full scene graph traversal. The broad type
 query enables scene-wide network port enumeration; classification properties
 enable targeted BOM generation for specific cable schedules. This argues for
-both a well-known scope prim (`ConnectionPoints`) and property namespace
-queries as complementary discovery mechanisms.
+semantic labels and property namespace queries as complementary discovery mechanisms.
 
 ### Connection compatibility validation
 
@@ -1035,8 +1155,8 @@ matches a CNC spindle's taper standard and RPM limits.
 
 **Key requirement:** Compatibility checking requires structured, typed
 properties on both sides of the connection. This is impossible with naming
-conventions alone and is the strongest argument for the `connectionPoint:`
-property namespace. The vocabulary specification defines which properties must
+conventions alone and is the strongest argument for the `connectionPoint` semantic
+classification, with details provided in the namespaced propertiese. The vocabulary specification defines which properties must
 match and which must be within compatible ranges.
 
 ### Cross-domain validation (SimReady Foundation)
@@ -1064,7 +1184,7 @@ connection features in the design model and emits an Xform at each one with
 typed properties from the design dimensions. No geometry needs to be
 fabricated, no naming conventions need to be reverse-engineered. The exporter
 writes what it knows (position, orientation, port diameter, interface standard)
-and downstream PLM integration adds what it knows (operating parameters,
+and (optional) downstream PLM integration can add what it knows (operating parameters,
 allowed mating components) in a composition layer.
 
 **Key requirement:** The barrier for CAD tools must be low -- an Xform with
@@ -1116,7 +1236,7 @@ adding a port -- the connection point Xform and its properties regenerate
 automatically through the USD export pipeline, maintaining consistency between
 the design and its digital twin.
 
-### What comes from PLM
+### What comes from PLM and other Enterprise information systems
 
 Product Lifecycle Management (PLM) systems carry information that is not
 represented in the CAD geometry but is essential for connection point
@@ -1187,9 +1307,9 @@ questions to guide the community toward one.
    that domain-specific property sets extend with their own properties.
 
 3. **Discoverability without heavy infrastructure.** Connection points should
-   be discoverable through standardized conventions -- a well-known property
-   namespace (e.g., `connectionPoint:`), a well-known scope prim
-   (`ConnectionPoints`), and a well-known purpose (`guide`). This
+   be discoverable through standardized conventions -- a well-known semantic labeling scheme
+   (e.g. `semantics:labels:category = ["connectionPoint"]`), structured namespaces for properties 
+   (e.g., `connectionPoint:`), and a well-known purpose (`guide`). This
    discoverability should not require a schema plugin to be installed. A
    formal applied API schema may be a future step, but discoverability should
    work from day one with conventions alone.
@@ -1207,9 +1327,8 @@ questions to guide the community toward one.
    CAD export tools can emit simply -- an Xform at the feature location with
    typed properties -- without requiring schema plugin dependencies, complex
    registration, or geometry fabrication. A CAD tool that identifies a pipe
-   flange should be able to emit an Xform with
-   `connectionPoint:type = "thermal"` and
-   `connectionPoint:portDiameter = 0.1016` as easily as it writes any other
+   flange should be able to emit an Xform with `semantics:labels:category = ["thermal","connectionPoint"]`
+   and `connectionPoint:portDiameter = 0.1016` as easily as it writes any other
    USD property. Emitting an Xform with properties is simpler than
    constructing a correctly tessellated mesh prim.
 
@@ -1250,8 +1369,9 @@ workflows above inform how each principle applies:
 aspect -- is served by two complementary mechanisms:
 
 1. **Scope prim discovery:** A tool can find all connection points on an asset
-   by looking for the well-known `ConnectionPoints` child scope under the
-   `defaultPrim`. This works for hierarchy-aware traversal.
+   using USD Sementics, a feature built into USD (https://openusd.org/dev/api/usd_semantics_overview.html). Filtering prims 
+   by semantic tags is very easy, using USD APIs. Using this mechanism, connection points can exist within a cad-oriented 
+   product structure, or (optionally) can be located within a well-known `ConnectionPoints` child scope under the `defaultPrim`.
 2. **Property namespace discovery:** A tool can query for any prim carrying
    `connectionPoint:` properties, regardless of where it sits in the hierarchy.
    This works for scene-wide queries across multiple assets.
