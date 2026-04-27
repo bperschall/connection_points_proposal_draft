@@ -64,49 +64,49 @@ gantt
     dateFormat YYYY-MM-DD
     axisFormat %b %d
 
-    section Phase 1: Proposal & Alignment
+    section Phase_1_Proposal_and_Alignment
     Address Aaron Luk feedback          :done, p1a, 2026-04-07, 3d
     Cross-reference migration plan      :done, p1b, 2026-04-07, 3d
     Incorporate Aaron Issue #1 feedback :done, p1b2, 2026-04-08, 2d
     Stakeholder discussion meeting      :done, p1c, 2026-04-08, 1d
-    Stakeholder action items - GitLab feedback :p1d, 2026-04-09, 1d
+    Stakeholder action items (GitLab feedback) :p1d, 2026-04-09, 1d
     Publish GitHub repo for external review :done, p1e, 2026-04-09, 1d
 
-    section OOTO + External Review Window
-    Out of office, Mon Apr 13 - Fri Apr 24 :crit, ooto, 2026-04-13, 10d
-    External review period - deadline Mon Apr 27 :active, p1f, 2026-04-13, 11d
-    Review feedback deadline, Mon        :milestone, m0, 2026-04-27, 0d
+    section OOTO_and_External_Review
+    Out of office (Apr 13 - Apr 24)    :crit, ooto, 2026-04-13, 10d
+    External review period (deadline Apr 27) :active, p1f, 2026-04-13, 11d
+    Review feedback deadline (Mon)      :milestone, m0, 2026-04-27, 0d
 
-    section Phase 2 - Feedback and Alignment, Mon Apr 27 - Fri May 8
+    section Phase_2_Feedback_and_Alignment_(Apr_27_-_May_8)
     Incorporate external review feedback :p2pre, 2026-04-27, 5d
     Shaad prototype results reviewed      :p2shaad, 2026-04-27, 3d
-    Follow-up session - relationships, multi-domain, SR Foundations :p2a, 2026-04-27, 3d
-    Christian Akesson - SR Foundations branch + sample USD files :p2b, 2026-04-27, 5d
+    Follow-up session (relationships, multi-domain, SR Foundations) :p2a, 2026-04-27, 3d
+    Christian Akesson - SR Foundations branch and sample USD files :p2b, 2026-04-27, 5d
     Present at migration plan kickoff   :milestone, m1, 2026-04-28, 0d
-    External feedback incorporated, Fri  :milestone, m1b, 2026-05-01, 0d
+    External feedback incorporated (Fri) :milestone, m1b, 2026-05-01, 0d
     Venue decision finalized            :p2c, 2026-05-04, 4d
-    Internal alignment confirmed, Fri    :milestone, m2, 2026-05-08, 0d
+    Internal alignment confirmed (Fri)  :milestone, m2, 2026-05-08, 0d
 
-    section Phase 3 - Vocabulary Spec + Artifacts, Mon May 4 - Fri May 29
-    Draft base namespace - cross-cutting properties :p3a, 2026-05-04, 5d
+    section Phase_3_Vocabulary_Spec_and_Artifacts_(May_4_-_May_29)
+    Draft base namespace (cross-cutting properties) :p3a, 2026-05-04, 5d
     Draft thermal domain properties     :p3b, 2026-05-11, 5d
     Draft electrical domain properties  :p3c, 2026-05-18, 5d
     PTC RJ45 co-authoring experiment    :p3g, 2026-05-11, 10d
-    Sample USD files, per domain         :p3d, 2026-05-11, 14d
-    Property validators - FET201 v0.2.0 :p3e, 2026-05-18, 10d
+    Sample USD files (per domain)       :p3d, 2026-05-11, 14d
+    Property validators (FET201 v0.2.0) :p3e, 2026-05-18, 10d
     Internal review cycle               :p3f, 2026-05-25, 5d
-    Vocabulary spec v0.1 complete, Fri   :milestone, m3, 2026-05-29, 0d
+    Vocabulary spec v0.1 complete (Fri) :milestone, m3, 2026-05-29, 0d
 
-    section Phase 4 - Partner PoCs, Mon May 18 - Fri Jun 5
+    section Phase_4_Partner_PoCs_(May_18_-_Jun_5)
     Cadence Reality DT consumption PoC  :p4a, 2026-05-18, 15d
     PTC RJ45 full round-trip PoC       :p4b, 2026-05-18, 15d
-    PoC results documented, Fri          :milestone, m4, 2026-06-05, 0d
+    PoC results documented (Fri)        :milestone, m4, 2026-06-05, 0d
 
-    section Phase 5 - Early Access Publication, Mon Jun 8 - Fri Jun 26
+    section Phase_5_Early_Access_(Jun_8_-_Jun_26)
     Prepare public PR / issue           :p5a, 2026-06-08, 5d
-    Migration plan v0.1.0 signed off, Fri :milestone, m5, 2026-06-12, 0d
+    Migration plan v0.1.0 signed off (Fri) :milestone, m5, 2026-06-12, 0d
     Partner review period               :p5b, 2026-06-15, 10d
-    Early access published, Fri          :milestone, m6, 2026-06-26, 0d
+    Early access published (Fri)        :milestone, m6, 2026-06-26, 0d
 ```
 
 
