@@ -67,7 +67,7 @@ gantt
     section Phase_1_Proposal_and_Alignment
     Address Aaron Luk feedback          :done, p1a, 2026-04-07, 3d
     Cross-reference migration plan      :done, p1b, 2026-04-07, 3d
-    Incorporate Aaron Issue #1 feedback :done, p1b2, 2026-04-08, 2d
+    Incorporate Aaron Issue 1 feedback  :done, p1b2, 2026-04-08, 2d
     Stakeholder discussion meeting      :done, p1c, 2026-04-08, 1d
     Stakeholder action items (GitLab feedback) :p1d, 2026-04-09, 1d
     Publish GitHub repo for external review :done, p1e, 2026-04-09, 1d
