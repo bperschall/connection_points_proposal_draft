@@ -63,7 +63,7 @@ the domain prefixes give simulation tools exactly the properties they need.
 
 ---
 
-## Q2: Multi-domain connection points
+## Q2: Multi-domain connection points [UPDATE - April 28, 2026]
 
 **Should a single prim carry properties from multiple domain prefixes, or
 should multi-domain interfaces be modeled as co-located single-domain prims?**
@@ -121,22 +121,51 @@ def Xform "wrist_tool_changer" {
 }
 ```
 
-### Strawman recommendation
+### Decision: Option B (co-located single-domain prims)
 
-Go with Option A -- single prim, multiple domain prefixes. In the physical
-world it is ONE connector. If modeled as three separate prims, a compatibility
-check must figure out that these three prims are part of the same physical
-interface and must all be satisfied together. A single prim with a `domains`
-array keeps it atomic. A validation tool can check all domain properties in one
-pass. This also matches how the CAD model represents it -- one feature in the
-design, not three co-located features.
+Each physical domain (thermal, electrical, airflow, network) gets its own prim
+under the `ConnectionPoints` scope, rather than combining multiple domain
+prefixes on a single prim.
 
-### Discussion question
+### Rationale
 
-> "In your experience with multi-domain connectors, does it make more sense to
-> treat them as one item with multiple property sets, or as separate items that
-> happen to be in the same place? Think about how validation and simulation
-> tools would consume it."
+1. **Parallel authoring across disciplines.** Different engineering disciplines
+   own different domains and update them independently. A thermal engineer
+   should not need to touch the electrical prim to update cooling metadata, and
+   vice versa. Option B enables parallel authoring without merge conflicts or
+   coordination overhead.
+
+2. **Clean alignment with the layer authoring model.** Option B maps directly
+   to the confirmed layer authoring approach (Q4): each domain's connection
+   interface data can live in its own USD file, composed via sublayers. This is
+   consistent with Shaad Boochoon's payload variant switching approach.
+
+3. **Reflects real-world engineering workflows.** Aaron Gilroy (who manages BOM
+   creation for our equipment internally) made the case that real-world
+   engineering workflows are organized by discipline, not by connection point.
+   The data model should reflect how people actually work.
+
+### Where Option A still applies
+
+Option A (single prim with multiple domain prefixes) remains valid for simple
+single-domain assets where only one domain is present (e.g., a purely
+electrical junction box). It is not deprecated, just not the default starting
+point for multi-domain interfaces.
+
+### Validation via PoC
+
+Steve Ghee at PTC is building an RJ45 connector PoC using Option B in
+Creo/Windchill. Target: May 11 NVIDIA HQ visit. This will be the first
+non-theoretical asset testing the co-located prim layout at scale (1 port to 4
+on a tray, tray into rack, rack instanced).
+
+### Meeting source
+
+Decision reached April 28, 2026 in the Connection Points Proposal Part 2
+session (Beau Perschall, Jason Batchkoff, Shaad Boochoon, Christian Akesson,
+Aaron Gilroy). Dassault 3DEXPERIENCE team (morning call same day) also
+gravitates toward this approach, aligning it with their "skeleton representation"
+concept.
 
 ---
 
