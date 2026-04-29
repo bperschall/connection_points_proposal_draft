@@ -169,7 +169,7 @@ concept.
 
 ---
 
-## Q3: Connection relationships
+## Q3: Connection relationships [DEFERRED - April 28, 2026]
 
 **Should the vocabulary support explicit relationships between mated connection
 points, or should mating be expressed only through spatial proximity and
@@ -224,9 +224,37 @@ prim paths should be stable and predictable.
 > 'connected to' relationship in the USD file, or can your tools discover
 > connections spatially?"
 
+### Decision: Deferred
+
+Connection relationships are out of scope for v0.2.0.
+
+### Rationale
+
+1. **Orchestration-layer problem, not a single-asset concern.** The group
+   reached consensus that explicit connection relationships (e.g.,
+   `rel connectionPoint:matedTo`) belong to the facility layout or routing
+   tool, not the single-asset specification. A single asset should describe its
+   own interfaces; how those interfaces connect to other assets is a scene
+   composition problem.
+
+2. **Strawman recommendation validated.** No one in the room identified a
+   consumption workflow that requires explicit "connected to" relationships in
+   the USD file today. Relationships are fragile during layout iteration, and
+   spatial proximity plus compatible properties is sufficient for current tools.
+
+3. **Door remains open.** Deferring does not close the door. The vocabulary is
+   being designed so that relationship properties can be added in a future
+   version without breaking existing assets or tools.
+
+### Meeting source
+
+Deferred by consensus on April 28, 2026 in the Connection Points Proposal
+Part 2 session (Beau Perschall, Jason Batchkoff, Shaad Boochoon, Christian
+Akesson, Aaron Gilroy).
+
 ---
 
-## Q4: Layer authoring model
+## Q4: Layer authoring model [CONFIRMED - April 28, 2026]
 
 **The current `_ConnectionPoints.usd` layer pattern provides clean separation.
 Should this be formalized?**
@@ -265,6 +293,37 @@ validation can check for it and warn if missing, without failing the asset.
 > "Does anyone have a workflow where connection points MUST live in the same
 > file as geometry? If not, we'll formalize the separate layer as the
 > recommended pattern."
+
+### Decision: Confirmed
+
+Connection interface data is authored in its own dedicated USD file, separate
+from geometry. The existing `<AssetName>_ConnectionPoints.usd` pattern is
+formalized.
+
+### Rationale
+
+1. **Stakeholder alignment across organizations.** Dassault 3DEXPERIENCE team
+   (April 28 morning call) gravitates to this approach, seeing alignment with
+   their internal "skeleton representation" concept. Shaad Boochoon's payload
+   variant switching provides the implementation model. Christian Akesson's
+   existing pipeline already follows this pattern.
+
+2. **Enables parallel authoring.** Separate layer authoring enables independent
+   update of connection metadata without touching geometry files, which is
+   critical for the parallel authoring model confirmed in Q2 (Option B).
+
+3. **Strength of recommendation: SHOULD, not MUST.** The strength stays as a
+   formalized strong recommendation rather than a hard requirement. Edge cases
+   (small simple assets, rapid prototyping) where a separate file adds overhead
+   without benefit are acknowledged. SimReady Foundation validation checks for
+   the separate layer and warns if missing, without failing the asset.
+
+### Meeting source
+
+Confirmed on April 28, 2026 in the Connection Points Proposal Part 2 session
+(Beau Perschall, Jason Batchkoff, Shaad Boochoon, Christian Akesson, Aaron
+Gilroy) with supporting alignment from the Dassault 3DEXPERIENCE morning call
+(Beau Perschall, Max Bickley, Jeremie, Dassault team).
 
 ---
 
@@ -310,7 +369,7 @@ workflow, making migration smoother.
 
 ---
 
-## Q6: Units and standards
+## Q6: Units and standards [CONFIRMED - April 28, 2026]
 
 **Should the vocabulary enforce SI units, support unit annotations, or defer to
 USD's existing `UsdGeomLinearUnits`?**
@@ -362,6 +421,38 @@ values are always SI.
 > "Are we comfortable with SI-only for stored values? The main risk is that
 > teams working in imperial units need to convert on write -- but the benefit
 > is that every consumer gets consistent units without conversion logic."
+
+### Decision: Confirmed
+
+SI units are enforced at the SimReady neutral level. All stored values use SI
+(meters, Pascals, kg, Amperes, Volts, Celsius, etc.) as specified in the
+strawman table above.
+
+### Rationale
+
+1. **SimReady defines the neutral interchange format.** Dassault pushed back
+   during the April 28 morning call, citing mixed incoming units from their
+   data sources. Beau held firm: SimReady defines the neutral interchange
+   format, and SI is the standard at that level. Runtime tools and display
+   layers are free to convert to imperial or any other unit system for
+   presentation, but the stored values in the USD file are always SI.
+
+2. **Consistent with USD conventions, eliminates ambiguity.** This aligns with
+   USD's own convention (`metersPerUnit`) and eliminates the combinatorial
+   problem of every consuming tool needing to check for unit tags and convert.
+   One unit system, zero ambiguity.
+
+3. **Write-time cost accepted.** The group acknowledged that teams working in
+   imperial units bear a conversion cost on write, but the benefit to every
+   downstream consumer (consistent units, no conversion logic) outweighs that
+   cost.
+
+### Meeting source
+
+Confirmed on April 28, 2026 in the Connection Points Proposal Part 2 session
+(Beau Perschall, Jason Batchkoff, Shaad Boochoon, Christian Akesson, Aaron
+Gilroy). Dassault 3DEXPERIENCE team acknowledged the decision in the morning
+call despite their initial pushback.
 
 ---
 
