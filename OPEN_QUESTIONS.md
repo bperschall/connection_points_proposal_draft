@@ -327,7 +327,7 @@ Gilroy) with supporting alignment from the Dassault 3DEXPERIENCE morning call
 
 ---
 
-## Q5: `guide` purpose
+## Q5: `guide` purpose [INVESTIGATED - April 30, 2026]
 
 **Connection point Xforms carry no geometry, but `guide` purpose still signals
 metadata scaffolding. Should the vocabulary mandate it?**
@@ -344,9 +344,9 @@ real content."
 ### Example
 
 ```usda
-def Xform "fws_supply_main" (
-    purpose = "guide"
-) {
+def Xform "fws_supply_main"
+{
+    uniform token purpose = "guide"
     token connectionPoint:type = "thermal"
     token connectionPoint:direction = "supply"
     float connectionPoint:portDiameter = 0.1016
@@ -355,17 +355,74 @@ def Xform "fws_supply_main" (
 
 ### Strawman recommendation
 
-Mandate `guide` purpose. The cost is nearly zero (one extra line per prim) and
-the benefit is real: it provides a second discovery/filtering mechanism beyond
-the `connectionPoint:` namespace. A rendering tool that respects purpose will
-skip these prims entirely. A scene traversal tool looking for "just the real
-geometry" can filter on purpose. It also maintains continuity with the existing
-workflow, making migration smoother.
+Recommend `guide` purpose (SHOULD) on connection point Xforms, but do not
+mandate it (MUST). The benefit is real: it provides a second discovery and
+filtering mechanism beyond the `connectionPoint:` namespace, and maintains
+continuity with the existing workflow. However, `guide` purpose cascades to
+descendant prims via USD's computed purpose inheritance (see investigation
+below), which means any renderable geometry placed beneath a `guide` connection
+point Xform becomes invisible unless it explicitly overrides purpose. This
+authoring constraint is acceptable for v0.2.0 (connection point Xforms are
+metadata carriers, not geometry containers), but mandating it would require a
+complementary validation rule to catch unintended geometry hiding. A SHOULD
+recommendation paired with a validator warning is the right balance for this
+stage of maturity.
 
 ### Discussion question
 
-> "Any objection to requiring `guide` purpose on all connection point Xforms?
-> It costs nothing and helps with filtering."
+> "Are there use cases where connection point Xforms would intentionally contain
+> renderable child geometry? If not, SHOULD with a validator warning is
+> sufficient. If so, we need to define the override pattern before escalating
+> to MUST."
+
+### [INVESTIGATION UPDATE - April 30, 2026]
+
+**Finding:** `guide` purpose cascades to descendant prims via USD's computed
+purpose inheritance. A child prim with no explicit purpose authored beneath a
+`guide` Xform will also be treated as `guide` by renderers -- meaning it
+becomes invisible in the viewport.
+
+**Test:** Created a stage with an Xform (`purpose = "guide"`) containing a
+child Mesh with no purpose set. The child geometry was invisible in Omniverse,
+confirming that computed purpose inheritance applies. The child prim must have
+an explicit `purpose = "render"` (or `"default"`) to override the parent's
+`guide` and remain visible.
+
+**Implication for the vocabulary:**
+
+Mandating `guide` on connection point Xforms is still viable, but it introduces
+an authoring constraint: any renderable geometry placed beneath a connection
+point Xform (e.g., a visual indicator, debug geometry, or a nested component)
+would be invisible unless it explicitly overrides purpose. This is the concern
+Jason Batchkoff raised in the April 28 meeting.
+
+For v0.2.0 connection points, this constraint is acceptable because:
+
+1. Connection point Xforms are metadata carriers, not geometry containers. They
+   hold `connectionPoint:` properties and a transform -- no child geometry is
+   expected.
+2. The `ConnectionPoints` scope already separates connection point prims from
+   the asset's renderable hierarchy.
+3. If a future use case requires visible child geometry (e.g., debug
+   visualization), the author can explicitly set `purpose = "render"` on those
+   children.
+
+However, mandating `guide` would require a complementary validation rule: **no
+renderable geometry prims should exist as descendants of a `guide`-purpose
+connection point Xform without an explicit purpose override.** Without this
+validation, an author could unknowingly place geometry under a connection point
+and wonder why it disappeared.
+
+**Updated recommendation:** Recommend `guide` purpose (SHOULD) rather than
+mandate it (MUST) for v0.2.0. Document the cascade behavior and the authoring
+constraint. Add a validator warning (not error) if renderable geometry is found
+under a `guide` connection point Xform without an explicit purpose override.
+Revisit for MUST in a future version once tooling and authoring patterns are
+established.
+
+**Source:** April 28 CP Part 2 meeting (Jason Batchkoff raised cascade concern),
+April 30 testing in Omniverse (Beau Perschall), Max Bickley confirmation of
+runtime filtering risk.
 
 ---
 
