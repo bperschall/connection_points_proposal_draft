@@ -63,7 +63,7 @@ the domain prefixes give simulation tools exactly the properties they need.
 
 ---
 
-## Q2: Multi-domain connection points [UPDATE - April 28, 2026]
+## Q2: Multi-domain connection points [UPDATE - May 7, 2026]
 
 **Should a single prim carry properties from multiple domain prefixes, or
 should multi-domain interfaces be modeled as co-located single-domain prims?**
@@ -159,13 +159,66 @@ Creo/Windchill. Target: May 11 NVIDIA HQ visit. This will be the first
 non-theoretical asset testing the co-located prim layout at scale (1 port to 4
 on a tray, tray into rack, rack instanced).
 
+### Option C: Semantic annotations on existing structure (DEFERRED)
+
+Steve Ghee (PTC) proposed a third approach that goes beyond the Option A vs.
+Option B framing. Rather than organizing connection points into a dedicated
+top-level scope (whether as a single multi-domain prim or co-located
+single-domain prims), Option C treats connection points as semantic annotations
+on the parts themselves, discoverable via USDSemantics. The connection points
+inherit the actual physical structure of the model rather than imposing a new
+organizational hierarchy.
+
+**Example (conceptual):**
+
+```usda
+# Instead of a top-level ConnectionPoints scope, annotations live
+# on the physical structure itself:
+def Xform "robot_arm" {
+    def Xform "wrist_mount" {
+        # Mechanical connection semantics annotated directly
+        token connectionPoint:type = "mechanical"
+        token connectionPoint:mechanical:interfaceStandard = "ATI_QC21"
+    }
+    def Xform "pneumatic_hose_fitting" {
+        # Pneumatic connection semantics annotated directly
+        token connectionPoint:type = "pneumatic"
+        int connectionPoint:pneumatic:portCount = 6
+    }
+    def Xform "electrical_harness_plug" {
+        # Electrical connection semantics annotated directly
+        token connectionPoint:type = "electrical"
+        int connectionPoint:electrical:pinCount = 12
+    }
+}
+```
+
+**Steve's rationale:**
+
+1. **Different domains are owned by different users.** As Aaron Gilroy also pointed out, multiple domains are managed by different disciplines. Annotating existing structure respects that ownership naturally.
+
+2. **Physical connections are physically distinct points.** The mechanical joint, pneumatic hose, and electrical cable on a robot arm are literally different locations on the part. The data model should reflect that physical reality rather than grouping them into an artificial scope.
+
+3. **Flexibility and scalability.** Annotating the structure that already exists is more flexible than creating new organizational hierarchy. It avoids requiring ISVs to adopt a new schema before content can flow into their tools.
+
+**Why Option C is deferred for v0.2.0:**
+
+1. **Adoption barrier.** A schema-driven semantic annotation approach requires ISVs consuming connection point data to adopt that schema before any content flows into their tools. For this first iteration, the priority is keeping the barrier to entry as low as possible so connection point data can move between tools quickly.
+
+2. **Taxonomy prerequisite.** Both Beau Perschall and Steve Ghee agree that semantic annotations without a constraining taxonomy risk becoming unmanageable noise that is impossible to validate. The taxonomy must be in place first to make annotations meaningful and verifiable. That work is underway but not yet complete.
+
+3. **Discoverability tradeoff.** Annotations distributed across the model hierarchy require consumers to traverse the full structure to find all connection points. The co-located prim approach (Option B) provides immediate discoverability from a known location. A future version could combine both: a lightweight manifest or relationship referencing semantically annotated prims deeper in the hierarchy, giving both discoverability and structural fidelity.
+
+**Path forward:** Once the connection point taxonomy is established and validated through the Option B implementation, Option C becomes a strong candidate for a subsequent version. The taxonomy work will provide the vocabulary needed to make semantic annotations meaningful, and real-world experience with Option B will clarify which discoverability patterns consumers actually need.
+
 ### Meeting source
 
 Decision reached April 28, 2026 in the Connection Points Proposal Part 2
 session (Beau Perschall, Jason Batchkoff, Shaad Boochoon, Christian Akesson,
 Aaron Gilroy). Dassault 3DEXPERIENCE team (morning call same day) also
 gravitates toward this approach, aligning it with their "skeleton representation"
-concept.
+concept. Option C added May 7, 2026 based on feedback from Steve Ghee (PTC)
+referencing his response to the initial proposal draft.
 
 ---
 
