@@ -45,6 +45,14 @@ compute rack exemplar exercises the network domain; the UPS exemplar exercises
 the electrical domain. Together they demonstrate that the vocabulary
 generalizes across fundamentally different connection profiles.
 
+![Connection Points Vocabulary v0.2.0 -- Architectural Overview](connection_points_vocabulary_visual_v5.png)
+
+*Figure 1: The vocabulary in three ideas. (1) Each physical connection is one
+Xform prim carrying one domain. (2) Spatial, semantic, and engineering concerns
+live in separate layers with different owners and update cadences. (3) The
+namespace architecture -- a shared base plus per-domain extensions -- scales to
+new equipment classes and new domains without vocabulary changes.*
+
 ---
 
 ## Generalization and extensibility
