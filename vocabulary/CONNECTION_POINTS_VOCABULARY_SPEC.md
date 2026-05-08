@@ -1,6 +1,6 @@
 # Connection Points Vocabulary Specification v0.2.0
 
-Copyright &copy; 2026, NVIDIA Corporation (DRAFT)
+Copyright &copy; 2026, NVIDIA Corporation, version 0.1.0 (DRAFT), May 8, 2026
 
 Beau Perschall
 
@@ -52,6 +52,65 @@ Xform prim carrying one domain. (2) Spatial, semantic, and engineering concerns
 live in separate layers with different owners and update cadences. (3) The
 namespace architecture -- a shared base plus per-domain extensions -- scales to
 new equipment classes and new domains without vocabulary changes.*
+
+---
+
+## Use cases driving property selection
+
+Every property in the vocabulary exists because at least one downstream use case
+requires it. This section documents the three primary use cases identified
+through stakeholder feedback and maps each domain property to the use cases it
+serves. Properties that do not trace to at least one use case should be
+challenged or deferred.
+
+### Use case 1: Thermal and performance simulation
+
+Simulation ISVs consume connection point metadata to configure boundary
+conditions. They need flow rates, temperatures, pressures, and fluid types to
+set up thermal and electrical loops without manual configuration. The vocabulary
+is designed so that any thermal, electrical, or CFD simulation tool -- current
+or future -- can consume these properties as structured input rather than
+relying on external lookup tables or manual operator configuration.
+
+**Initial properties driven by this use case:** `designFlowRate`,
+`maxFlowRate`, `designTemperature`, `maxTemperature`, `operatingPressure`,
+`maxPressure`, `fluidType`, `nominalVoltage`, `maxCurrent`, `phases`,
+`frequency`, `ratedPower`, `powerFactor`, `ventArea`, `designAirflow`,
+`maxAirflow`, `designDeltaT`, `staticPressure`.
+
+### Use case 2: Robotic assembly in datacenter operations
+
+As datacenter operations scale, robotic systems will increasingly handle
+physical assembly tasks -- installing trays, mounting racks, routing cables,
+and connecting fluid lines. These systems need to know how connections
+physically mate: insertion direction (from the Xform orientation), engagement
+depth, disconnect mechanism, clearance envelope for tooling access, and
+physical connector geometry. The same properties support maintenance sequence
+planning and collision avoidance in digital twin rehearsal.
+
+**Initial properties driven by this use case:** `matingDepth`,
+`disconnectType`, `serviceClearance`, `portDiameter`, `flangeRating`,
+`flangeSize`, `connectorType`.
+
+### Use case 3: Assembly calculations and BOM generation
+
+Facilities teams need connection point data for cable and pipe run calculations
+(linear footage), bill of materials generation, and procurement. Port types,
+connector standards, and physical dimensions feed directly into takeoff tools
+and procurement systems.
+
+**Initial properties driven by this use case:** `portDiameter`,
+`flangeRating`, `flangeSize`, `connectorType`, `portType`, `lineRate`,
+`matingDepth` (for cable length BOM calculations).
+
+### Cross-cutting properties
+
+Some properties serve multiple use cases: `matingDepth` supports both robotic
+assembly (insertion planning) and BOM calculations (cable length). `portDiameter`
+serves both simulation (flow area) and assembly (pipe specification). The base
+namespace properties (`domain`, `direction`, `system`, `disconnectType`,
+`serviceClearance`) are consumed by all three use cases for discovery, filtering,
+and spatial reasoning.
 
 ---
 
@@ -285,10 +344,30 @@ For fluid connections (cooling loops, condensate, chilled water).
 | `connectionPoint:thermal:maxTemperature` | float (Celsius) | Rated temperature limit |
 | `connectionPoint:thermal:operatingPressure` | float (Pa) | Nominal operating pressure |
 | `connectionPoint:thermal:maxPressure` | float (Pa) | Rated pressure limit |
-| `connectionPoint:thermal:fluidType` | token | Fluid in the loop (e.g. `water`, `glycol_water`, `refrigerant`) |
-| `connectionPoint:thermal:glycolConcentration` | float (0-1) | Glycol fraction (0.0 when `fluidType` is not `glycol_water`); conditionality is a validation concern |
+| `connectionPoint:thermal:fluidType` | token | Working fluid in the loop. Use descriptive tokens that encode concentration where relevant (e.g. `water`, `glycol_water_30`, `glycol_water_50`, `refrigerant_R410A`, `refrigerant_R134a`). See "Fluid type tokens" below. |
 | `connectionPoint:thermal:flangeRating` | token | Flange standard designation (e.g. `ANSI_150`) |
 | `connectionPoint:thermal:flangeSize` | token | Nominal pipe size designation (e.g. `NPS4`) |
+
+**Fluid type tokens:** The `fluidType` property uses a single descriptive token
+rather than separate fluid-type and concentration properties. This simplification
+was adopted based on stakeholder feedback that emerging refrigerant cocktails make
+concentration a poor standalone property -- the fluid name itself is the
+meaningful identifier for simulation tool lookup. Recommended tokens:
+
+| Token | Description |
+|-------|-------------|
+| `water` | Plain water (no glycol) |
+| `glycol_water_30` | 30% propylene glycol / water mix |
+| `glycol_water_50` | 50% propylene glycol / water mix |
+| `refrigerant_R410A` | R-410A refrigerant |
+| `refrigerant_R134a` | R-134a refrigerant |
+| `refrigerant_R454B` | R-454B (low-GWP replacement for R-410A) |
+| `dielectric` | Dielectric coolant (immersion cooling) |
+
+This list is extensible. Asset authors may introduce new tokens following the
+pattern `{fluid_category}_{specifier}`. Validators should accept unknown tokens
+with a warning rather than rejecting them, to allow for emerging fluid types
+without requiring vocabulary revisions.
 
 ### Electrical domain (`connectionPoint:electrical:`)
 
@@ -382,7 +461,7 @@ their input is expected.
 | CAD tool (Creo, NX, SolidWorks) | Spatial placement (Xform position/orientation), extractable physical geometry (port dimensions if modeled) | `thermal:portDiameter` (if modeled in CAD) |
 | PLM system (Windchill, Teamcenter) | Engineering parameters from product data, BOM structure, reference designators | `thermal:designFlowRate`, `electrical:nominalVoltage`, instance identity via refdes |
 | Equipment datasheets | Manufacturer-rated limits and specifications | `thermal:maxPressure`, `electrical:maxCurrent`, `electrical:powerFactor` |
-| Site configuration / SME input | Installation-specific values that vary by deployment | `electrical:frequency`, `thermal:glycolConcentration`, `electrical:breakerRating` |
+| Site configuration / SME input | Installation-specific values that vary by deployment | `electrical:frequency`, `thermal:fluidType`, `electrical:breakerRating` |
 | Engineering / asset author | Semantic identity set once during asset authoring | `connectionPoint:domain`, `connectionPoint:direction`, `connectionPoint:system` |
 
 **Tooling gap:** The provenance table above describes where data *should*
@@ -525,12 +604,6 @@ These are positions that remain open for stakeholder discussion. Normative
 decisions (units, temperature scale, pressure reference) have been moved to
 the Units section above.
 
-### glycolConcentration conditionality: validation concern
-
-The vocabulary defines `glycolConcentration` as a property. Whether it is
-required, optional, or prohibited for a given connection is validation logic
-(e.g., a future CP.010 rule), not a vocabulary concern.
-
 ### Redundant power feeds: deferred
 
 Single-feed only for the initial vocabulary. The property name
@@ -654,8 +727,7 @@ specification, follow these rules strictly.
    property defined in a domain namespace must be present on every connection
    of that domain. Use 0.0 for numeric properties that are not physically
    meaningful for a specific connection (e.g., `matingDepth = 0.0` for
-   hardwired electrical, `powerFactor = 0.0` for DC connections,
-   `glycolConcentration = 0.0` for plain water). Stub-profile and
+   hardwired electrical, `powerFactor = 0.0` for DC connections). Stub-profile and
    draft-profile assets may omit domain properties that are not yet
    available; see the Minimal Valid Connection Points section for the
    three validation levels (stub, draft, production).
@@ -706,8 +778,7 @@ specification, follow these rules strictly.
   prims (one thermal, one electrical) at the same Xform position.
 
 - **Omitting properties because values are zero or N/A.** A hardwired
-  electrical connection must still include `matingDepth = 0.0`. A plain-water
-  thermal connection must still include `glycolConcentration = 0.0`. Omission
+  electrical connection must still include `matingDepth = 0.0`. Omission
   is ambiguous; explicit zero is a statement.
 
 - **Using exemplar values as defaults.** The number `480.0` appears frequently

@@ -1,6 +1,6 @@
 # Connection Points Vocabulary: Compute Rack Exemplar
 
-Copyright &copy; 2026, NVIDIA Corporation (DRAFT)
+Copyright &copy; 2026, NVIDIA Corporation, version 0.1.0 (DRAFT), May 8, 2026
 
 **Parent specification:** [Connection Points Vocabulary Spec v0.2.0](CONNECTION_POINTS_VOCABULARY_SPEC.md)
 
@@ -181,8 +181,7 @@ def Xform "tcs_supply_manifold" (
     float connectionPoint:thermal:maxTemperature = 45.0
     float connectionPoint:thermal:operatingPressure = 550000
     float connectionPoint:thermal:maxPressure = 800000
-    token connectionPoint:thermal:fluidType = "glycol_water"
-    float connectionPoint:thermal:glycolConcentration = 0.3
+    token connectionPoint:thermal:fluidType = "glycol_water_30"
     token connectionPoint:thermal:flangeRating = "none"
     token connectionPoint:thermal:flangeSize = "none"
 }
@@ -216,8 +215,7 @@ def Xform "tcs_return_manifold" (
     float connectionPoint:thermal:maxTemperature = 55.0
     float connectionPoint:thermal:operatingPressure = 400000
     float connectionPoint:thermal:maxPressure = 800000
-    token connectionPoint:thermal:fluidType = "glycol_water"
-    float connectionPoint:thermal:glycolConcentration = 0.3
+    token connectionPoint:thermal:fluidType = "glycol_water_30"
     token connectionPoint:thermal:flangeRating = "none"
     token connectionPoint:thermal:flangeSize = "none"
 }

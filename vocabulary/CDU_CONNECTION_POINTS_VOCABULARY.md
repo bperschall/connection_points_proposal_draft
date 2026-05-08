@@ -1,6 +1,6 @@
 # Connection Points Vocabulary: CDU Exemplar
 
-Copyright &copy; 2026, NVIDIA Corporation (DRAFT)
+Copyright &copy; 2026, NVIDIA Corporation, version 0.1.0 (DRAFT), May 8, 2026
 
 **Parent specification:** [Connection Points Vocabulary Spec v0.2.0](CONNECTION_POINTS_VOCABULARY_SPEC.md)
 
@@ -93,7 +93,6 @@ def Xform "fws_supply_main" (
     float connectionPoint:thermal:operatingPressure = 1034000
     float connectionPoint:thermal:maxPressure = 1500000
     token connectionPoint:thermal:fluidType = "water"
-    float connectionPoint:thermal:glycolConcentration = 0.0
     token connectionPoint:thermal:flangeRating = "ANSI_150"
     token connectionPoint:thermal:flangeSize = "NPS4"
 }
@@ -129,7 +128,6 @@ def Xform "fws_return_main" (
     float connectionPoint:thermal:operatingPressure = 896000
     float connectionPoint:thermal:maxPressure = 1500000
     token connectionPoint:thermal:fluidType = "water"
-    float connectionPoint:thermal:glycolConcentration = 0.0
     token connectionPoint:thermal:flangeRating = "ANSI_150"
     token connectionPoint:thermal:flangeSize = "NPS4"
 }
@@ -164,8 +162,7 @@ def Xform "tcs_supply_main" (
     float connectionPoint:thermal:maxTemperature = 50.0
     float connectionPoint:thermal:operatingPressure = 689000
     float connectionPoint:thermal:maxPressure = 1000000
-    token connectionPoint:thermal:fluidType = "glycol_water"
-    float connectionPoint:thermal:glycolConcentration = 0.3
+    token connectionPoint:thermal:fluidType = "glycol_water_30"
     token connectionPoint:thermal:flangeRating = "none"
     token connectionPoint:thermal:flangeSize = "none"
 }
@@ -200,8 +197,7 @@ def Xform "tcs_return_main" (
     float connectionPoint:thermal:maxTemperature = 60.0
     float connectionPoint:thermal:operatingPressure = 552000
     float connectionPoint:thermal:maxPressure = 1000000
-    token connectionPoint:thermal:fluidType = "glycol_water"
-    float connectionPoint:thermal:glycolConcentration = 0.3
+    token connectionPoint:thermal:fluidType = "glycol_water_30"
     token connectionPoint:thermal:flangeRating = "none"
     token connectionPoint:thermal:flangeSize = "none"
 }
@@ -376,7 +372,7 @@ differences between FWS and TCS connections on the same CDU:
 |----------|-----|-----|
 | Port diameter | 0.1016 m (4-inch NPS) | 0.0762 m (3-inch NPS) |
 | Disconnect type | Flanged | Quick-disconnect |
-| Fluid type | Water | Glycol/water (30%) |
+| Fluid type | `water` | `glycol_water_30` |
 | Operating pressure | 1,034,000 Pa (supply) | 689,000 Pa (supply) |
 | Design temperature (supply) | 7.2 C | 12.0 C |
 
@@ -384,14 +380,16 @@ Under v0.1.0, a single `aif:spec:nominalFlow` on the equipment prim could not
 express these per-connection differences. The vocabulary makes each connection
 self-describing.
 
-### glycolConcentration: always present
+### Fluid type tokens encode concentration
 
-Per the property completeness principle in the parent specification, all
-thermal domain properties are present on every thermal connection. The FWS
-connections set `glycolConcentration = 0.0` (plain water), while TCS
-connections set `glycolConcentration = 0.3` (30% glycol mix). Whether a
-non-zero value is *required* when `fluidType = glycol_water` is a validation
-concern (e.g., a future CP.010 rule), not a vocabulary concern.
+The `fluidType` property uses a single descriptive token rather than separate
+fluid-type and concentration properties (see parent specification for the
+full rationale and token table). The FWS connections use `water` (plain water),
+while TCS connections use `glycol_water_30` (30% propylene glycol mix). This
+simplification was adopted based on stakeholder feedback -- emerging refrigerant
+cocktails make concentration a poor standalone
+property; the fluid name itself is the meaningful identifier for simulation
+tool lookup.
 
 ### Regional electrical variation
 

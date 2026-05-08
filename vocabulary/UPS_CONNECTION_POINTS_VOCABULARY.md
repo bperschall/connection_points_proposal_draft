@@ -1,6 +1,6 @@
 # Connection Points Vocabulary: UPS Exemplar
 
-Copyright &copy; 2026, NVIDIA Corporation (DRAFT)
+Copyright &copy; 2026, NVIDIA Corporation, version 0.1.0 (DRAFT), May 8, 2026
 
 **Parent specification:** [Connection Points Vocabulary Spec v0.2.0](CONNECTION_POINTS_VOCABULARY_SPEC.md)
 

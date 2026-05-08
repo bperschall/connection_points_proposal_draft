@@ -1,6 +1,6 @@
 # Separation of Concerns for Connection Points in USD
 
-Copyright &copy; 2026, NVIDIA Corporation, version 0.1 (DRAFT)
+Copyright &copy; 2026, NVIDIA Corporation, version 0.2 (DRAFT), May 8, 2026
 
 Beau Perschall
 
@@ -49,9 +49,10 @@ Beau Perschall
   - [Alignment with Asset Structure Principles](#alignment-with-asset-structure-principles)
   - [Open questions for discussion](#open-questions-for-discussion)
 - [Relationship to other proposals and frameworks](#relationship-to-other-proposals-and-frameworks)
-- [Next steps](#next-steps)
+- [Acknowledgments](#acknowledgments)
 - [Appendix A: Current AIF connection point naming conventions](#appendix-a-current-aif-connection-point-naming-conventions)
 - [Appendix B: Provenance and AI-assisted drafting](#appendix-b-provenance-and-ai-assisted-drafting)
+- [Changelog](#changelog)
 
 ## Introduction
 
@@ -114,7 +115,11 @@ a connection point:
 
 - **Datacenter cooling equipment** (CDUs, CRAHs, rear-door heat exchangers)
   connects to facility water supply and return piping, with specific flow
-  rates, temperatures, and pressures.
+  rates, temperatures, and pressures. Piping connections (liquid, refrigerant)
+  are general industrial interfaces found across process plants,
+  manufacturing, and datacenters alike, while airflow interfaces
+  (intake/exhaust vent zones on equipment surfaces) are more specific to
+  datacenter and HVAC environments.
 - **Electrical distribution equipment** (PDUs, RPPs, UPS systems, busways)
   connects to facility power with specific voltages, amperages, phases, and
   connector types.
@@ -163,7 +168,7 @@ point carries information across three fundamental concerns:
 | **Representation** | Xform transform: position (translation) + full orientation (rotation), with a standard axis convention for connection direction and keying | Connection type, flow direction, system membership, tooling standard | Flow rate, temperature, pressure, voltage, amperage, port diameter, flange rating, taper type, payload capacity, mating depth, service clearance, etc. |
 | **Consumed by** | Spatial queries, routing algorithms, clearance checks, tool change simulation | Discovery, BOM generation, compatibility matching, connection validation, tooling selection | Simulation runtimes, engineering analysis, regulatory compliance, interchangeability verification |
 | **Variability** | Changes per equipment instance and placement | Relatively stable across instances of the same equipment type | May vary by configuration, operating mode, or site-specific requirements |
-| **Current location** | Geometry prims (planes, disks) in a ConnectionPoints layer | Encoded in prim naming conventions | Scattered across `customData`, SimReady metadata, or absent entirely |
+| **Currently defined as** | Geometry prims (planes, disks) in a ConnectionPoints layer | Encoded in prim naming conventions | Scattered across `customData`, SimReady metadata, or absent entirely |
 
 Today, there is no standardized representation in USD for connection points.
 The first column (position and orientation) is captured indirectly through
@@ -185,7 +190,10 @@ five primary domains, each with its own set of engineering properties:
    locations on equipment, carrying vent area, airflow volume, temperature
    delta, and static pressure. These vent locations are critical inputs for
    computational fluid dynamics (CFD) simulations that model heat dissipation,
-   hot/cold aisle behavior, and environmental airflow patterns.
+   hot/cold aisle behavior, and environmental airflow patterns. Note: airflow
+   interfaces are finite surfaces rather than discrete points -- the term
+   "connection point" is used broadly to include any physical interface where
+   interchangeability, compatibility, or simulation boundary conditions matter.
 4. **Network and data** -- Physical ports for network connectivity and data
    transfer (OSFP, QSFP112, RJ45), carrying port type, supported line rates,
    supported configurations, pin count, and allowed transceivers. Physical
@@ -289,7 +297,7 @@ itself a separation of concerns:
 | Spatial extent | Property | Consumed by |
 |---|---|---|
 | Interface diameter or area | `connectionPoint:portDiameter`, `connectionPoint:ventArea` | Compatibility matching, clearance checks |
-| Mating / engagement depth | `connectionPoint:matingDepth` | Insertion simulation, cable routing clearance |
+| Mating / engagement depth | `connectionPoint:matingDepth` | Insertion simulation, cable routing clearance. (Alternative naming "insertion depth" under community review.) |
 | Service clearance envelope | `connectionPoint:serviceClearance` | Facility layout, maintenance access planning |
 | Bolt pattern extent | `connectionPoint:boltPatternPCD`, `connectionPoint:boltCount` | Mounting compatibility, structural analysis |
 
@@ -454,7 +462,47 @@ convention). No built-in validation of which keys are expected for a given
 connection type. Still convention-based, just with stronger typing than
 `customData`.
 
-**Approach 3: Applied API schema**
+**Approach 3: Semantic labels via SemanticsLabelsAPI**
+
+USD's built-in `SemanticsLabelsAPI` provides a mechanism for classifying prims
+with semantic labels without defining a custom schema. A connection point prim
+could carry labels like:
+
+```
+def Xform "fws_supply_main" (
+    prepend apiSchemas = ["SemanticsLabelsAPI:aif"]
+) {
+    uniform token[] semantics:labels:category = ["aif", "thermal", "connectionpoint"]
+
+    # Engineering properties still use the connectionPoint: namespace
+    float connectionPoint:portDiameter = 0.1016
+    token connectionPoint:type = "thermal"
+    token connectionPoint:direction = "supply"
+}
+```
+
+Tools discover connection points by querying for prims with the
+`SemanticsLabelsAPI` applied and filtering by label values, using built-in USD
+infrastructure that every USD runtime already supports.
+
+*Strengths:* Schema-aware discovery using a built-in API -- no custom schema
+registration or distribution needed. Consuming applications get label-based
+discovery for free when they read USD files. Labels can be layered onto
+existing assets via composition (a sublayer overlay adds semantic labels
+without modifying the base vocabulary layer). This enables retroactive
+adoption: assets authored with Approach 2 properties today can gain Approach 3
+discoverability later without any change to the base asset.
+
+*Weaknesses:* Adds a parallel classification surface that must stay
+synchronized with the `connectionPoint:` property namespace -- a prim's
+labels and its properties must agree on what kind of connection point it is.
+Authoring complexity increases because two taxonomies (label hierarchy and
+property vocabulary) must be maintained in concert. The label taxonomy is
+untyped (string tokens), providing no validation beyond string matching.
+ISV vendors and integrators who are new to USD may find the simpler
+property-namespace approach more approachable as a first step.
+
+**Approach 4: Applied API schema**
 
 A formal applied API schema (e.g., `ConnectionPointAPI`) defines the
 properties, their types, and their defaults in a schema definition. Tools
@@ -472,10 +520,24 @@ property layout manually. Higher adoption barrier for tool developers.
 Schema evolution (adding new properties) requires versioning and
 redistribution.
 
+**Approaches 2 and 3 are complementary, not competing.** Namespaced properties
+(Approach 2) carry the engineering data -- type, flow rate, port diameter,
+flange rating. Semantic labels (Approach 3) provide a built-in discovery
+mechanism for finding connection point prims across large stages. Because
+`SemanticsLabelsAPI` is part of core OpenUSD, consuming applications gain
+label-based discovery without installing custom schemas. Critically, semantic
+labels can be **added retroactively as a composition sublayer** -- an asset
+authored with Approach 2 properties today can gain Approach 3 discoverability
+later without any change to the base vocabulary layer. This layered adoption
+path means the community does not need to choose between the two approaches
+up front.
+
 **Recommended path: start simple, formalize later**
 
 The practical reality of CAD-to-USD pipelines argues for starting with
-**Approach 2 (namespaced properties on Xform prims)** as the near-term target:
+**Approach 2 (namespaced properties on Xform prims)** as the near-term
+target, with Approach 3 (semantic labels) as a complementary layer that can
+be adopted incrementally:
 
 - CAD export tools emit an **Xform** at the location of each identified
   connection feature (pipe nozzle, flange, port cutout, vent opening), with
@@ -484,10 +546,11 @@ The practical reality of CAD-to-USD pipelines argues for starting with
   `connectionPoint:portDiameter = 0.1016`, and other properties it knows
   directly from the design feature. This is simpler than emitting a mesh prim
   and no harder than writing any other USD property.
-- PLM integration adds more properties in a composition layer:
-  `connectionPoint:designFlowRate`, `connectionPoint:allowedFluids`, etc.
-  These override or augment the CAD-authored properties through normal USD
-  composition.
+- Additional properties (`connectionPoint:designFlowRate`,
+  `connectionPoint:allowedFluids`, etc.) can be added through any valid
+  path -- PLM integration, direct CAD annotation, or manual editing -- in a
+  composition layer that overrides or augments the initial properties through
+  normal USD composition.
 - A **published vocabulary specification** (a document, not a schema plugin)
   defines the standardized property names, types, allowed values, and which
   properties are expected for each connection domain -- including the spatial
@@ -497,12 +560,15 @@ The practical reality of CAD-to-USD pipelines argues for starting with
 - The Asset Validation Framework validates that connection point prims carry
   the expected properties with valid values, using the vocabulary
   specification as its rule set.
+- Semantic labels (Approach 3) can be layered on at any point via
+  composition to improve discoverability across large stages without
+  modifying base assets.
 - If and when adoption reaches a point where a formal schema adds clear value
   (codegen, schema-level queries across large stages, ecosystem-wide
-  interoperability), the namespaced properties can be **promoted to an applied
-  API schema** whose property layout matches the already-established
-  conventions. Existing assets remain valid because the property names and
-  types are unchanged.
+  interoperability), the namespaced properties can be **promoted to a formal
+  applied API schema** (Approach 4) whose property layout matches the
+  already-established conventions. Existing assets remain valid because the
+  property names and types are unchanged.
 
 This approach deepens the separation of concerns: the Xform's transform
 captures position and orientation (including keying), namespaced properties
@@ -612,7 +678,7 @@ piping systems. In datacenter contexts, these include Facility Water System
 | Design temperature | The rated temperature range | 45-65 &deg;F supply, 55-75 &deg;F return |
 | Operating pressure | The rated working pressure | 150 PSI, 10 bar |
 | Pressure drop | The expected pressure loss across the connection | 5 PSI, 0.3 bar |
-| Fluid type | The working fluid | Water, propylene glycol 30%, R-410A |
+| Fluid type | Working fluid (token encodes concentration) | `water`, `glycol_water_30`, `refrigerant_R410A` |
 | Allowed fluids | Compatible fluids for this connection | Water, PG 30%, EGW 25% |
 | Allowed particulates | Particulate tolerance of the connection | &lt; 50 micron |
 | Allowed hoses | Compatible hose or pipe assemblies | Vendor-specific part list |
@@ -684,11 +750,14 @@ interconnect through high-density fiber and copper interfaces, and in
 manufacturing and robotics where fieldbus and industrial Ethernet networks
 connect controllers, sensors, and actuators.
 
-A key consideration for network ports is that physical and logical port
-mappings are not always one-to-one. A single physical OSFP port may support
-multiple logical configurations (e.g., 2x400G or 1x800G), and port naming
-must accommodate both the physical connector identity and the logical network
-identity assigned in a system model.
+A key consideration is that network ports have a dual identity: a **physical
+identity** (the connector type and its location -- e.g., rack 4, tray 3,
+second port from left) and a **logical identity** (the OS-level address or
+network role assigned in orchestration). Different use cases need different
+identities. A single physical OSFP port may support multiple logical
+configurations (e.g., 2x400G or 1x800G). The vocabulary captures the physical
+interface; logical port mapping is an orchestration-layer concern deferred to
+a future revision.
 
 Beyond the physical connector standard, network connections benefit from
 classification by transport medium and functional role. A fiber BOM tool should
@@ -774,7 +843,7 @@ across domain-specific schemas.
 | Property | Description | Applies to |
 |---|---|---|
 | Port diameter / interface area | The physical dimension of the interface opening; replaces inferring size from geometry | All domains |
-| Mating depth | How far a connector, pipe, or tool inserts before fully seated | Coolant, network, mechanical |
+| Mating depth | How far a connector, pipe, or tool inserts before fully seated. (Community naming discussion: "insertion depth" has been suggested as an alternative term -- feedback welcome.) | Coolant, network, mechanical |
 | Service clearance | Minimum clear space required around the connection for access, cable bend radii, or tool change swing paths | All domains |
 | Insertion force | The force required to mate the connection | Power, coolant, network, mechanical |
 | Mated cycle count | Rated number of insertion/removal cycles | Power, coolant, network, mechanical |
@@ -865,7 +934,11 @@ facilities. Equipment in these environments has diverse connection needs:
 
 VFI use cases emphasize the need for **mechanical** connection points (mounting
 interfaces, structural supports) alongside thermal and electrical connections,
-as factory layout must account for physical mounting constraints.
+as factory layout must account for physical mounting constraints. Note that
+manufacturing equipment and robotic systems share many of the same connection
+point patterns -- a CNC spindle is itself a robotic tool interface, and a
+robot wrist flange is a mechanical mount. The vocabulary treats these as a
+single continuum of mechanical/tooling interfaces.
 
 ### Robotics and autonomous systems
 
@@ -1116,11 +1189,17 @@ adding a port -- the connection point Xform and its properties regenerate
 automatically through the USD export pipeline, maintaining consistency between
 the design and its digital twin.
 
-### What comes from PLM
+### What comes from PLM (or other engineering data sources)
 
-Product Lifecycle Management (PLM) systems carry information that is not
-represented in the CAD geometry but is essential for connection point
-completeness:
+Operating parameters, material specifications, and compatibility data may come
+from PLM systems, but PLM is not the only valid source. Direct CAD annotation,
+manual editing of the USD layer, or custom scripts are equally valid paths.
+The vocabulary is agnostic to data provenance -- what matters is that the
+properties are present and correctly typed.
+
+Product Lifecycle Management (PLM) systems, where available, carry information
+that is not represented in the CAD geometry but is essential for connection
+point completeness:
 
 - **Operating parameters** -- Design flow rates, operating pressures and
   temperatures, voltage and current ratings are specified in engineering
@@ -1213,13 +1292,17 @@ questions to guide the community toward one.
    USD property. Emitting an Xform with properties is simpler than
    constructing a correctly tessellated mesh prim.
 
-6. **Additive PLM decoration.** PLM-sourced properties (operating parameters,
-   allowed mating components, simulation models) should layer onto the
-   CAD-authored connection point through normal USD composition -- a stronger
-   layer or sublayer that adds or overrides properties. The connection point
-   should be usable in a partially populated state (Xform + type + spatial
-   extents from CAD, operating parameters from PLM to follow). Parametric updates from design
-   revisions should propagate cleanly.
+6. **Additive decoration from any valid source.** Additional properties
+   (operating parameters, allowed mating components, simulation models) should
+   layer onto the initial connection point through normal USD composition -- a
+   stronger layer or sublayer that adds or overrides properties. PLM
+   integration is one valid source for these properties, but direct CAD
+   annotation and manual editing of the USD layer are equally valid paths.
+   The vocabulary is agnostic to data provenance -- what matters is that the
+   properties are present and correctly typed. The connection point should be
+   usable in a partially populated state (Xform + type + spatial extents
+   initially, operating parameters added later). Parametric updates from
+   design revisions should propagate cleanly.
 
 7. **Validation-ready.** The property vocabulary should carry enough structured
    information that connection compatibility can be checked programmatically
@@ -1246,8 +1329,8 @@ workflows above inform how each principle applies:
 | **Model hierarchy and `kind`** | Connection points are sub-component detail, below the `component` kind boundary. They do not participate in `kind`-based traversal; they are found by descending into a known scope within a component. |
 | **Naming conventions** | The property namespace (`connectionPoint:thermal:flowRate`) uses only valid USD property name characters. Prim names for individual connection points follow the restricted character set from the principles document. The migration from current vendor-prefixed prim names (`vertiv_fws_supply_piping_connection_main`) to cleaner identifiers should reference these conventions. |
 
-**Discoverability** -- flagged by Steve Ghee at PTC as the most important
-aspect -- is served by two complementary mechanisms:
+**Discoverability** -- flagged as the most important aspect by stakeholders --
+is served by complementary mechanisms:
 
 1. **Scope prim discovery:** A tool can find all connection points on an asset
    by looking for the well-known `ConnectionPoints` child scope under the
@@ -1255,12 +1338,18 @@ aspect -- is served by two complementary mechanisms:
 2. **Property namespace discovery:** A tool can query for any prim carrying
    `connectionPoint:` properties, regardless of where it sits in the hierarchy.
    This works for scene-wide queries across multiple assets.
+3. **Semantic label discovery (future/complementary):** USD's built-in
+   `SemanticsLabelsAPI` can classify prims with labels like
+   `["aif", "thermal", "connectionpoint"]`, enabling schema-aware discovery
+   across large stages without custom schemas. This can be added as a
+   composition sublayer overlay without changing existing property-based
+   assets (see Approach 3 in the representation spectrum above).
 
-Both mechanisms should be available. The scope prim provides structural
-predictability; the property namespace provides flexibility for tools that
-need to search across entire facility scenes. Connection point metadata should
-be accessible before loading payloads, ensuring that lightweight discovery
-and planning tools do not require geometry loading.
+Mechanisms 1 and 2 are recommended from day one. Mechanism 3 is a
+complementary option that can be adopted incrementally as tooling matures.
+Connection point metadata should be accessible before loading payloads,
+ensuring that lightweight discovery and planning tools do not require
+geometry loading.
 
 ### Open questions for discussion
 
@@ -1320,9 +1409,11 @@ and planning tools do not require geometry loading.
 
 9. **Port naming and hierarchy.** For network and data ports, how should the
    schema relate physical port identity (e.g., `OSFP1`) to logical network
-   identity (e.g., `C1` for compute network)? Should both live on the
-   connection point, or should logical identity be managed in a separate
-   system model layer?
+   identity (e.g., `C1` for compute network)? The vocabulary captures the
+   physical interface; logical port mapping is an orchestration-layer concern.
+   This question is deferred to a future revision, with the expectation that
+   logical identity will be managed in a separate system model layer composed
+   over the physical port connection points.
 
 ## Relationship to other proposals and frameworks
 
@@ -1485,45 +1576,29 @@ to any domain-specific metadata that needs to attach to USD prims.
   vocabulary matures to the point where a formal schema is warranted, the
   Physics schema pattern provides a proven model to follow.
 
-## Next steps
+## Acknowledgments
 
-1. **Land the v0.1.0 Foundation baseline.** The
-   [AIF-to-SimReady Foundation migration](https://gitlab-master.nvidia.com/bperschall/aif_simready_migration_plan)
-   formalizes current connection point conventions (CP.001-CP.006) into the
-   Foundation's Requirements/Capabilities/Features/Profiles model. This
-   establishes the scaffolding (FET201, profiles, validation infrastructure)
-   that the vocabulary specification will evolve.
-2. **Coordinate with the Identifiers proposal.** Explore a joint vocabulary
-   specification for namespaced property conventions with Aaron Luk and TAC
-   stakeholders. The goal is a common foundation for attaching structured
-   metadata to USD prims -- source identifiers (Aaron's concern) and
-   domain-specific properties (this proposal's concern) -- without duplicating
-   effort or creating incompatible conventions.
-3. **Draft the vocabulary specification.** Define the `connectionPoint:`
-   namespace: property names, types, allowed values, and domain-specific
-   prefixes. Start with thermal and electrical domains where real AIF assets
-   and active partner engagement (Cadence Reality DT, PTC) provide immediate
-   validation.
-4. **Prototype with partner tools.** Two proof-of-concept tracks:
-   - **Cadence Reality DT consumption:** Author existing Vertiv/CRAH connection
-     point data as Xform + `connectionPoint:` properties; demonstrate direct
-     consumption by CFD simulation without external lookup tables.
-   - **PTC CAD export:** Demonstrate PTC's SPT tools emitting Xform-based
-     connection points with typed properties from CAD design features (starting
-     with an RJ45 network port connection point).
-5. **Publish the vocabulary specification.** Move to a public venue (GitHub
-   Issue/PR on [NVIDIA/simready-foundation](https://github.com/NVIDIA/simready-foundation)
-   or [OpenUSD-proposals](https://github.com/PixarAnimationStudios/OpenUSD-proposals))
-   for external review and partner engagement.
-6. **Evolve FET201 to v0.2.0.** Update connection point requirements from
-   naming-convention-based (v0.1.0) to property-based (v0.2.0). New validators
-   query `connectionPoint:` properties. Migration tooling converts existing
-   assets. v0.1.0 requirements remain valid during transition.
-7. **Evaluate schema promotion criteria.** Define conditions under which the
-   vocabulary should be promoted to a formal applied API schema (e.g.,
-   adoption breadth, performance needs for schema-level queries, ecosystem
-   interoperability requirements). This ensures the community has a clear
-   path from conventions to schema without premature commitment.
+The author thanks the following individuals whose technical feedback and domain
+expertise materially shaped this proposal:
+
+- **Steve Ghee** (PTC) -- Environmental interface framing, SemanticsLabelsAPI
+  discovery approach, industrial equipment generalization, PLM optionality,
+  bolt pattern and tolerance considerations, and terminology refinements
+  including the "insertion depth" naming suggestion.
+- **Steve Blackwell** (Vertiv) -- Fluid type simplification, use-case-first
+  design principle, IFC mapping potential, directionality feedback, and
+  extensive datacenter equipment domain expertise across thermal, electrical,
+  and airflow domains.
+- **Aaron Gilroy** (NVIDIA) -- Logical schematic concept for network port
+  identity, BOM generation workflow insights, and identifier separation of
+  concerns alignment.
+- **Asmita Wankhede** (NVIDIA) -- Venue guidance (SRF positioning), naming
+  concerns in 3D context, Newton schema alignment direction, and SME
+  coordination.
+- **Jeremie Pigny** (Dassault) -- Skeleton representation alignment,
+  3DEXPERIENCE export path considerations, and SI unit feedback.
+- **Aaron Luk** (NVIDIA) -- Identifier separation of concerns proposal
+  alignment and PCP coaching framework.
 
 ---
 
@@ -1642,3 +1717,58 @@ The following materials were provided as input context for drafting:
 
 9. *Keep it simple -- no child mesh prims. Express spatial extents as
    metadata properties, reinforcing the separation of concerns.*
+
+---
+
+## Changelog
+
+### v0.2 (May 8, 2026)
+
+- **SemanticsLabelsAPI as Approach 3.** Added USD's built-in
+  `SemanticsLabelsAPI` as a complementary discovery mechanism between
+  namespaced properties (Approach 2) and formal applied API schemas
+  (renumbered to Approach 4). Includes USDA code example, balanced pros/cons
+  analysis, and the key insight that semantic labels can be layered
+  retroactively via composition without changing base assets.
+- **Environmental interface acknowledgment.** Airflow domain now explicitly
+  notes that these interfaces are finite surfaces rather than discrete points
+  -- the term "connection point" is used broadly for any physical interface
+  where compatibility or simulation boundary conditions matter.
+- **Industrial vs. datacenter-specific framing.** Datacenter cooling section
+  distinguishes piping connections (general industrial, found across process
+  plants and manufacturing) from airflow interfaces (datacenter/HVAC-specific).
+- **Manufacturing and robotics overlap.** Added cross-reference note between
+  VFI and Robotics sections acknowledging shared connection point patterns
+  (CNC spindles as robotic tool interfaces, robot flanges as mechanical
+  mounts).
+- **Network logical/physical identity.** Network domain rewritten to
+  explicitly frame the dual identity of ports (physical connector location
+  vs. OS-level/orchestration address) and defer logical mapping to a future
+  revision.
+- **PLM optionality.** Data sourcing language softened throughout -- PLM is
+  now one of several valid provenance paths alongside direct CAD annotation
+  and manual editing. Principle 6 renamed to "Additive decoration from any
+  valid source." Vocabulary is explicitly provenance-agnostic.
+- **Fluid type simplification.** Replaced separate `fluidType` +
+  `glycolConcentration` properties with a single descriptive token encoding
+  concentration (e.g., `glycol_water_30`). Applied across vocabulary spec
+  and all exemplars.
+- **Use-case justification.** Added "Use cases driving property selection"
+  section to the vocabulary spec tracing all properties to three use cases:
+  thermal/performance simulation, robotic datacenter assembly, assembly
+  calculations/BOM.
+- **Mating depth naming.** Added community naming discussion note --
+  "insertion depth" suggested as alternative term, feedback welcome.
+- **"Currently defined as" wording.** Updated three-concerns table row label
+  for clarity (was "Current location").
+- **Discoverability expanded.** Added semantic label discovery as a third
+  complementary mechanism alongside scope prim and property namespace
+  discovery.
+- **Acknowledgments section.** Added contributor credits for stakeholders
+  whose feedback materially shaped the proposal.
+- **Next steps removed.** Moved to internal roadmap; not required for
+  external stakeholder review.
+
+### v0.1 (April 2026)
+
+- Initial draft circulated for internal and partner review.
