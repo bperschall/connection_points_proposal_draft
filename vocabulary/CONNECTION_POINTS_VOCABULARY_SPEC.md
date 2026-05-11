@@ -1,6 +1,6 @@
 # Connection Points Vocabulary Specification v0.2.0
 
-Copyright &copy; 2026, NVIDIA Corporation, version 0.1.0 (DRAFT), May 8, 2026
+Copyright &copy; 2026, NVIDIA Corporation, version 0.2.0 (DRAFT), May 11, 2026
 
 Beau Perschall
 
@@ -289,6 +289,14 @@ reject assets on that basis alone. A future vocabulary revision or validation
 profile may introduce closed value sets for specific properties; until then,
 all token properties are open.
 
+**Human-readable naming (SG-E4):** USD prim names are constrained by character
+restrictions (no spaces, limited special characters). Authors SHOULD set the
+built-in USD `displayName` metadata on connection point prims to provide
+human-readable labels -- for example, `displayName = "Facility Water Supply --
+Primary"`. The `displayName` metadata is already supported by most USD viewers
+and handles localization natively. No custom vocabulary property is needed for
+this purpose.
+
 ### Why physical geometry is NOT in the base namespace
 
 Physical connection geometry (port dimensions, mating depth) lives in
@@ -333,6 +341,17 @@ Each domain namespace carries two kinds of properties:
 ### Thermal domain (`connectionPoint:thermal:`)
 
 For fluid connections (cooling loops, condensate, chilled water).
+
+> **Naming note (SG-E1):** In datacenter contexts, "thermal" refers specifically
+> to *liquid-cooled thermal* connections -- piped fluid loops carrying heat away
+> from equipment. Gas-phase thermal cooling (air moving over equipment) is covered
+> by the separate `connectionPoint:airflow:` domain. This naming reflects how
+> datacenter engineering teams segment their work: liquid cooling teams own the
+> thermal domain, while airflow/CFD teams own the airflow domain. Adjacent
+> industries (manufacturing, robotics) with hydraulic or chemical fluid connections
+> would follow the same structural pattern using the `connectionPoint:thermal:`
+> namespace for fluid-based connections, or introduce new domain namespaces
+> (e.g. `connectionPoint:hydraulic:`) if the property set diverges significantly.
 
 | Property | Type | Description |
 |----------|------|-------------|
@@ -422,6 +441,16 @@ heat to the surrounding air, even liquid-cooled platforms. A CFD tool modeling
 the data hall needs to know where air enters and exits each piece of equipment,
 at what volume and temperature.
 
+> **Naming note (SG-E1):** Airflow is technically a form of thermal cooling
+> (gas-phase heat transfer). The separate `connectionPoint:airflow:` domain exists
+> because the property set, tooling, and engineering workflows for air-side
+> connections differ substantially from piped fluid connections. In datacenter
+> contexts, "airflow" means whitespace gas-phase cooling (air), while "thermal"
+> means piped liquid cooling. For adjacent use cases involving pressurized gas
+> (e.g. pneumatic actuators in robotic workcells), a separate
+> `connectionPoint:pneumatic:` domain is anticipated -- see the "Additional
+> domains" section under Future Considerations.
+
 **Airflow interface concept:** An airflow connection point represents a
 contiguous spatial region where air crosses the equipment boundary -- not an
 individual slot, louver, or perforation. A rack's cold aisle face, a CDU's
@@ -431,6 +460,14 @@ interface, and whose `interfaceWidth` and `interfaceHeight` define its
 overall extent. The `freeAreaRatio` property captures what fraction of that
 interface is actually open to airflow, which allows a CFD tool to compute
 effective flow area without modeling individual perforations.
+
+**Anchor point convention (SG-E3):** The Xform position defines the **center**
+of the interface rectangle. The interface extends +/- `interfaceWidth`/2 along
+the local X axis and +/- `interfaceHeight`/2 along the local Y axis, with the
+local Z axis pointing in the airflow direction (outward for exhaust, inward for
+intake). This center-anchor convention is consistent with USD Xform conventions
+(where position is typically the object's local origin) and with the placement
+expectations of CFD tools that consume interface geometry.
 
 | Property | Type | Description |
 |----------|------|-------------|
@@ -616,6 +653,29 @@ Physical connection geometry lives in domain namespaces. The base namespace
 contains only properties that apply universally to every connection regardless
 of domain. See the rationale in the "Base namespace" section above.
 
+### Namespace prefix: `simready:connectionPoint:` vs. flat `connectionPoint:` (SG-E5)
+
+Steve Ghee (PTC) raised whether the connection point namespace should live
+under a `simready:` parent prefix (e.g. `simready:connectionPoint:airflow:`
+instead of `connectionPoint:airflow:`). This question is **deferred** and
+coupled to the venue decision: whether the Connection Points vocabulary
+ultimately lives in SimReady Foundation (SRF), is proposed to AOUSD as a
+neutral standard, or is published as an independent schema.
+
+Arguments for a `simready:` prefix: eliminates namespace collision risk if
+other USD ecosystems independently define `connectionPoint:` properties;
+aligns with SRF packaging conventions.
+
+Arguments against: the current flat namespace is the most portable option
+and is compatible with all three implementation approaches in the spec
+(namespaced attributes, applied API schema, and SemanticsLabelsAPI). Adding
+a vendor prefix now would create migration pain if CP is later standardized
+at a higher level, and would conflict with the SemanticsLabelsAPI approach
+(Approach 3) which uses core USD semantics without vendor prefixes.
+
+**Decision:** Deferred until the venue question is resolved. The flat
+`connectionPoint:` namespace remains the current position.
+
 ### Reserved property names
 
 The following property names are reserved for future vocabulary revisions.
@@ -758,7 +818,11 @@ specification, follow these rules strictly.
 8. **Prim names are not load-bearing.** Prim names (e.g.,
    `fws_supply_main`, `osfp_port_01`) are a readability convention. Tools
    must query `connectionPoint:system` and `connectionPoint:direction`
-   properties, not parse prim names.
+   properties, not parse prim names. Authors SHOULD set the USD `displayName`
+   metadata on connection point prims to provide human-readable labels
+   (e.g., `displayName = "Facility Water Supply -- Primary"`). This leverages
+   built-in USD metadata supported by most viewers and handles localization
+   natively, without adding a custom vocabulary property. (SG-E4)
 
 9. **Connection metadata goes in a sublayer.** Connection point properties are
    authored as composition overs in a dedicated `*ConnectionPoints*.usda`
@@ -804,3 +868,12 @@ specification, follow these rules strictly.
   `allowedTransceivers`). These exist only in the network domain. Do not
   invent equivalent array properties for other domains without a vocabulary
   revision.
+
+---
+
+## Changelog
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 0.2.0 | May 11, 2026 | **SG-E1:** Added naming convention notes to thermal and airflow domain headers clarifying datacenter-specific naming (thermal = liquid-cooled, airflow = gas-phase). **SG-E3:** Added explicit center-anchor specification for airflow interface rectangles. **SG-E4:** Added `displayName` metadata recommendation for human-readable connection point labels. **SG-E5:** Added namespace prefix (`simready:` vs. flat `connectionPoint:`) as open position, deferred to venue decision. Feedback source: Steve Ghee (PTC), May 8 email. |
+| 0.1.0 | May 8, 2026 | Initial v0.2.0 draft incorporating Steve Ghee branch feedback (SemanticsLabelsAPI as Approach 3, environmental interface acknowledgment, industrial/datacenter framing, PLM optionality, mating depth naming note, robotic/manufacturing merge, network logical/physical note), Steve Blackwell/Vertiv working session feedback (fluid type simplification, use-case-first design mandate), and Asmita venue meeting outcome (SRF for now). |
