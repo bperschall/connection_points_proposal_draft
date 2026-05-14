@@ -30,7 +30,7 @@ conflate three fundamentally different concerns:
 1. Connection points should be **Xform prims, not geometry prims** -- the
    transform captures position and full orientation (including keying), while
    typed properties capture everything else.
-2. A standardized **`connectionPoint:` property namespace** should replace
+2. A standardized **`simready:connectionPoint:` property namespace** should replace
    ad-hoc naming conventions as the carrier of semantic identity and
    engineering parameters.
 3. The approach should start with **namespaced properties** (not a formal
@@ -215,10 +215,10 @@ diameter) and the visual representation (a disk mesh) are different concerns.
 
 | Spatial extent | Property | Consumed by |
 |---|---|---|
-| Interface diameter / area | `connectionPoint:portDiameter`, `connectionPoint:ventArea` | Compatibility matching, clearance checks |
-| Mating depth | `connectionPoint:matingDepth` | Insertion simulation, routing clearance. (Alternative naming "insertion depth" under community review.) |
-| Service clearance | `connectionPoint:serviceClearance` | Facility layout, maintenance access |
-| Bolt pattern extent | `connectionPoint:boltPatternPCD` | Mounting compatibility, structural analysis |
+| Interface diameter / area | `simready:connectionPoint:portDiameter`, `simready:connectionPoint:ventArea` | Compatibility matching, clearance checks |
+| Mating depth | `simready:connectionPoint:matingDepth` | Insertion simulation, routing clearance. (Alternative naming "insertion depth" under community review.) |
+| Service clearance | `simready:connectionPoint:serviceClearance` | Facility layout, maintenance access |
+| Bolt pattern extent | `simready:connectionPoint:boltPatternPCD` | Mounting compatibility, structural analysis |
 
 **Standard axis convention** (analogous to ISO 9409-1 tool flange coordinate
 systems):
@@ -239,7 +239,7 @@ Four approaches exist on a spectrum from lightweight to formal:
 | Approach | Mechanism | Strengths | Weaknesses |
 |---|---|---|---|
 | **1. `customData` dictionaries** | Standardized `customData` keys | Minimal barrier, any tool can write | No typing, no validation, no composition |
-| **2. Namespaced properties** | `connectionPoint:` properties on Xform | Typed values, full composition semantics, no schema plugin | Convention-based discoverability |
+| **2. Namespaced properties** | `simready:connectionPoint:` properties on Xform | Typed values, full composition semantics, no schema plugin | Convention-based discoverability |
 | **3. Semantic labels (SemanticsLabelsAPI)** | USD's built-in `SemanticsLabelsAPI` classifies prims via semantic labels (e.g., `semantics:labels:category = ["aif","thermal","connectionpoint"]`) | Schema-aware discovery using built-in USD infrastructure -- no custom schema needed; consuming applications get it for free when reading USD files | Adds a parallel classification surface that must stay synchronized with property namespace; authoring complexity increases; label taxonomy must be maintained separately from property vocabulary |
 | **4. Applied API schema** | Formal `ConnectionPointAPI` | Maximum discoverability, codegen, validation | Requires schema definition, registration, and distribution as a plugin; higher adoption barrier |
 
@@ -278,19 +278,19 @@ Example:
 
 ```
 def Xform "fws_supply_main" {
-    float connectionPoint:portDiameter = 0.1016
-    float connectionPoint:matingDepth = 0.05
-    token connectionPoint:type = "thermal"
-    token connectionPoint:direction = "supply"
-    token connectionPoint:system = "FWS"
-    float connectionPoint:designFlowRate = 6.3
+    float simready:connectionPoint:portDiameter = 0.1016
+    float simready:connectionPoint:matingDepth = 0.05
+    token simready:connectionPoint:type = "thermal"
+    token simready:connectionPoint:direction = "supply"
+    token simready:connectionPoint:system = "FWS"
+    float simready:connectionPoint:designFlowRate = 6.3
 }
 ```
 
 ### Flat namespace vs. domain-specific prefixes?
 
-**Question:** Should it be `connectionPoint:flowRate` (flat) or
-`connectionPoint:thermal:flowRate` (domain-prefixed)?
+**Question:** Should it be `simready:connectionPoint:flowRate` (flat) or
+`simready:connectionPoint:thermal:flowRate` (domain-prefixed)?
 
 Flat is simpler for CAD tools to emit but may become unwieldy as domain
 properties accumulate. Domain-specific prefixes provide clearer organization
@@ -429,15 +429,15 @@ Example network connection point with classification properties:
 
 ```
 def Xform "OSFP1" {
-    token connectionPoint:type = "network"
-    token connectionPoint:network:medium = "fiber"
-    token connectionPoint:network:category = "high_speed_data"
-    token connectionPoint:network:fabricRole = "compute"
-    token connectionPoint:portType = "OSFP"
-    token[] connectionPoint:supportedLineRates = ["400GbE", "800GbE"]
-    token[] connectionPoint:supportedConfigurations = ["1x800G", "2x400G"]
-    token[] connectionPoint:allowedTransceivers = ["DR4", "FR4", "LR4"]
-    bool connectionPoint:hotPlugCapable = true
+    token simready:connectionPoint:type = "network"
+    token simready:connectionPoint:network:medium = "fiber"
+    token simready:connectionPoint:network:category = "high_speed_data"
+    token simready:connectionPoint:network:fabricRole = "compute"
+    token simready:connectionPoint:portType = "OSFP"
+    token[] simready:connectionPoint:supportedLineRates = ["400GbE", "800GbE"]
+    token[] simready:connectionPoint:supportedConfigurations = ["1x800G", "2x400G"]
+    token[] simready:connectionPoint:allowedTransceivers = ["DR4", "FR4", "LR4"]
+    bool simready:connectionPoint:hotPlugCapable = true
 }
 ```
 
@@ -487,9 +487,9 @@ intrinsic to the Xform's transform. The Xform captures *where* and *which
 direction*, while properties capture *how big*, *how deep*, *how much
 clearance*, and the physical characteristics of the interface.
 
-These cross-cutting properties argue for a base `connectionPoint:` namespace
-with domain-specific prefixes (`connectionPoint:thermal:`,
-`connectionPoint:electrical:`, etc.) adding their own properties. If the
+These cross-cutting properties argue for a base `simready:connectionPoint:` namespace
+with domain-specific prefixes (`simready:connectionPoint:thermal:`,
+`simready:connectionPoint:electrical:`, etc.) adding their own properties. If the
 community later adopts a formal applied API schema, these map naturally to a
 base `ConnectionPointAPI`.
 
@@ -563,10 +563,10 @@ because the consumption pattern drives asset structuring decisions.
 
 | Workflow | How it queries | Key structuring requirement |
 |---|---|---|
-| **CFD thermal simulation** (e.g., Cadence Reality DT) | Traverses assets, filters by `connectionPoint:type` (thermal, airflow), reads engineering properties for boundary conditions | Metadata accessible **before loading payloads** -- argues for interface-layer placement per the reference-payload pattern |
-| **BOM generation / cable routing** | Filters by `connectionPoint:type == "network"`, then by `network:medium`, `network:category`, `network:fabricRole` for targeted cable schedules (fiber, copper, DAC) | Discoverable by broad type + filterable by classification without full scene traversal -- argues for scope prim + property namespace as complementary mechanisms |
-| **Connection compatibility validation** | Queries `connectionPoint:` properties on both sides of a proposed connection; applies compatibility rules (matching diameters, pressures, bolt patterns) | Structured, typed properties on both endpoints -- impossible with naming conventions alone |
-| **Cross-domain validation** ([TC.002](https://gitlab-master.nvidia.com/bperschall/aif_simready_migration_plan), [EL.004](https://gitlab-master.nvidia.com/bperschall/aif_simready_migration_plan)) | Correlates equipment-level metadata (e.g., "supports FWS cooling") with `connectionPoint:type` and `connectionPoint:system` on child prims | Property queries replace name-regex matching -- more robust, extensible, convention-independent |
+| **CFD thermal simulation** (e.g., Cadence Reality DT) | Traverses assets, filters by `simready:connectionPoint:type` (thermal, airflow), reads engineering properties for boundary conditions | Metadata accessible **before loading payloads** -- argues for interface-layer placement per the reference-payload pattern |
+| **BOM generation / cable routing** | Filters by `simready:connectionPoint:type == "network"`, then by `network:medium`, `network:category`, `network:fabricRole` for targeted cable schedules (fiber, copper, DAC) | Discoverable by broad type + filterable by classification without full scene traversal -- argues for scope prim + property namespace as complementary mechanisms |
+| **Connection compatibility validation** | Queries `simready:connectionPoint:` properties on both sides of a proposed connection; applies compatibility rules (matching diameters, pressures, bolt patterns) | Structured, typed properties on both endpoints -- impossible with naming conventions alone |
+| **Cross-domain validation** ([TC.002](https://gitlab-master.nvidia.com/bperschall/aif_simready_migration_plan), [EL.004](https://gitlab-master.nvidia.com/bperschall/aif_simready_migration_plan)) | Correlates equipment-level metadata (e.g., "supports FWS cooling") with `simready:connectionPoint:type` and `simready:connectionPoint:system` on child prims | Property queries replace name-regex matching -- more robust, extensible, convention-independent |
 | **CAD export pipeline** | Exporter emits Xform at each connection feature with typed properties from design dimensions; PLM adds operating parameters in a composition layer | Low barrier -- no schema plugin, no geometry fabrication; partially populated connection points are valid |
 
 ## Data sourcing: CAD and PLM
@@ -589,7 +589,7 @@ be fabricated.
   translation and rotation per the standard axis convention.
 - **Spatial extents as properties** -- Pipe diameters, connector widths, vent
   areas, and bolt circle diameters are written as typed properties
-  (`connectionPoint:portDiameter`, `connectionPoint:ventArea`) rather than
+  (`simready:connectionPoint:portDiameter`, `simready:connectionPoint:ventArea`) rather than
   encoded in geometry dimensions.
 - **Interface standards** -- CAT40 spindle tapers, ISO 9409-1 robot flanges,
   OSFP port cutouts -- the standard governs the geometry and implicitly
@@ -658,7 +658,7 @@ for CAD exporters and PLM integrations to reverse-engineer.
 
 3. **Discoverability without heavy infrastructure.** Connection points should
    be discoverable through a well-known property namespace
-   (`connectionPoint:`), scope prim (`ConnectionPoints`), and purpose
+   (`simready:connectionPoint:`), scope prim (`ConnectionPoints`), and purpose
    (`guide`) -- no schema plugin required from day one.
 
 4. **Composability.** Properties participate in USD composition and can be
@@ -694,7 +694,7 @@ workflows above inform how each principle applies:
 | **Reference-Payload pattern** | Connection point metadata belongs in the lightweight interface layer, accessible before loading payloads. CFD tools and BOM generators need engineering parameters before any geometry is relevant. The existing `_ConnectionPoints.usd` sublayer already achieves this separation -- the vocabulary formalizes it. |
 | **`defaultPrim` and entrypoints** | The `ConnectionPoints` scope prim lives under the asset's `defaultPrim`, not alongside it. Tools discover it via a well-known child scope name under the asset root. |
 | **Model hierarchy and `kind`** | Connection points are sub-component detail, below the `component` kind boundary. They do not participate in `kind`-based traversal; they are found by descending into a known scope within a component. |
-| **Naming conventions** | The property namespace (`connectionPoint:thermal:flowRate`) uses only valid USD property name characters. Prim names for individual connection points follow the restricted character set from the principles document. The migration from current vendor-prefixed prim names (`vertiv_fws_supply_piping_connection_main`) to cleaner identifiers should reference these conventions. |
+| **Naming conventions** | The property namespace (`simready:connectionPoint:thermal:flowRate`) uses only valid USD property name characters. Prim names for individual connection points follow the restricted character set from the principles document. The migration from current vendor-prefixed prim names (`vertiv_fws_supply_piping_connection_main`) to cleaner identifiers should reference these conventions. |
 
 **Discoverability** -- flagged as the most important aspect by stakeholders --
 is served by complementary mechanisms:
@@ -703,7 +703,7 @@ is served by complementary mechanisms:
    by looking for the well-known `ConnectionPoints` child scope under the
    `defaultPrim`. This works for hierarchy-aware traversal.
 2. **Property namespace discovery:** A tool can query for any prim carrying
-   `connectionPoint:` properties, regardless of where it sits in the hierarchy.
+   `simready:connectionPoint:` properties, regardless of where it sits in the hierarchy.
    This works for scene-wide queries across multiple assets.
 3. **Semantic label discovery (future/complementary):** USD's built-in
    `SemanticsLabelsAPI` can classify prims with labels like
@@ -720,7 +720,7 @@ geometry loading.
 
 ### Open questions for discussion
 
-1. **Base vocabulary scope.** What belongs in the base `connectionPoint:`
+1. **Base vocabulary scope.** What belongs in the base `simready:connectionPoint:`
    namespace vs. domain-specific prefixes? Candidates for the base: type,
    direction, system identifier, spatial extents, and cross-cutting mechanical
    properties.
@@ -823,27 +823,27 @@ def Xform "fws_supply_main" {
     string sourceId:cadSystem = "SolidWorks"
 
     # Connection point domain properties (this proposal)
-    token connectionPoint:type = "thermal"
-    token connectionPoint:direction = "supply"
-    token connectionPoint:system = "FWS"
-    float connectionPoint:portDiameter = 0.1016
-    float connectionPoint:matingDepth = 0.05
-    float connectionPoint:designFlowRate = 6.3
-    token connectionPoint:fluidType = "water"
-    token connectionPoint:disconnectType = "flanged"
-    token connectionPoint:flangeRating = "ANSI_150"
+    token simready:connectionPoint:type = "thermal"
+    token simready:connectionPoint:direction = "supply"
+    token simready:connectionPoint:system = "FWS"
+    float simready:connectionPoint:portDiameter = 0.1016
+    float simready:connectionPoint:matingDepth = 0.05
+    float simready:connectionPoint:designFlowRate = 6.3
+    token simready:connectionPoint:fluidType = "water"
+    token simready:connectionPoint:disconnectType = "flanged"
+    token simready:connectionPoint:flangeRating = "ANSI_150"
 }
 ```
 
 In this model, a CAD exporter authors `sourceId:` properties (tracing back to
-the design feature) and spatial properties (`connectionPoint:portDiameter`
+the design feature) and spatial properties (`simready:connectionPoint:portDiameter`
 from the design geometry). A PLM integration adds operating parameters
-(`connectionPoint:designFlowRate`, `connectionPoint:flangeRating`) in a
+(`simready:connectionPoint:designFlowRate`, `simready:connectionPoint:flangeRating`) in a
 stronger composition layer. Both namespaces compose independently and are
 queryable by any tool that understands the namespace convention.
 
 A joint vocabulary specification covering both `sourceId:` and
-`connectionPoint:` namespaces would demonstrate that this pattern generalizes
+`simready:connectionPoint:` namespaces would demonstrate that this pattern generalizes
 to any domain-specific metadata that needs to attach to USD prims.
 
 ### Other related efforts
@@ -855,7 +855,7 @@ to any domain-specific metadata that needs to attach to USD prims.
   point completeness, property ranges, and compatibility without a formal
   schema plugin. The AIF-to-SimReady migration already defines cross-domain
   validators (TC.002, EL.004) that check metadata-to-connection-point
-  consistency; the `connectionPoint:` property namespace would make these
+  consistency; the `simready:connectionPoint:` property namespace would make these
   checks more robust by replacing name-pattern matching with property queries.
 - **USD Physics Schema** -- Demonstrates the pattern of applied API schemas
   (`PhysicsRigidBodyAPI`, `PhysicsCollisionAPI`) for simulation-relevant

@@ -296,10 +296,10 @@ itself a separation of concerns:
 
 | Spatial extent | Property | Consumed by |
 |---|---|---|
-| Interface diameter or area | `connectionPoint:portDiameter`, `connectionPoint:ventArea` | Compatibility matching, clearance checks |
-| Mating / engagement depth | `connectionPoint:matingDepth` | Insertion simulation, cable routing clearance. (Alternative naming "insertion depth" under community review.) |
-| Service clearance envelope | `connectionPoint:serviceClearance` | Facility layout, maintenance access planning |
-| Bolt pattern extent | `connectionPoint:boltPatternPCD`, `connectionPoint:boltCount` | Mounting compatibility, structural analysis |
+| Interface diameter or area | `simready:connectionPoint:portDiameter`, `simready:connectionPoint:ventArea` | Compatibility matching, clearance checks |
+| Mating / engagement depth | `simready:connectionPoint:matingDepth` | Insertion simulation, cable routing clearance. (Alternative naming "insertion depth" under community review.) |
+| Service clearance envelope | `simready:connectionPoint:serviceClearance` | Facility layout, maintenance access planning |
+| Bolt pattern extent | `simready:connectionPoint:boltPatternPCD`, `simready:connectionPoint:boltCount` | Mounting compatibility, structural analysis |
 
 This means the canonical connection point prim can be an **Xform** -- not a
 mesh. The Xform's transform captures position and full orientation (including
@@ -327,8 +327,8 @@ on the prim?
 
 The answer should be guided by what CAD export tools can realistically produce.
 A CAD tool that identifies a pipe nozzle during export can readily emit an
-Xform at the nozzle location with properties like `connectionPoint:type` and
-`connectionPoint:portDiameter`. Requiring that tool to fabricate geometry
+Xform at the nozzle location with properties like `simready:connectionPoint:type` and
+`simready:connectionPoint:portDiameter`. Requiring that tool to fabricate geometry
 (what shape? what tessellation?) or instantiate a registered applied API schema
 is a significantly higher bar. The representation should be something that CAD
 tools can emit simply, PLM integrations can augment afterward, and downstream
@@ -345,11 +345,11 @@ all share cross-cutting properties (insertion force, keying, temperature
 rating) as documented in the
 [SimReady Connection Points Examples](https://docs.google.com/document/d/1jZJGJpjW8kLDT6PubSTAD4WYMbWgPQM46_pkXdQli0I).
 
-**Question:** Should the vocabulary use a flat `connectionPoint:` namespace
+**Question:** Should the vocabulary use a flat `simready:connectionPoint:` namespace
 with a type discriminator and all properties at one level, or should it use
-domain-specific property prefixes (`connectionPoint:thermal:flowRate`,
-`connectionPoint:electrical:voltage`, `connectionPoint:airflow:ventArea`,
-`connectionPoint:network:lineRate`, `connectionPoint:mechanical:boltPattern`)
+domain-specific property prefixes (`simready:connectionPoint:thermal:flowRate`,
+`simready:connectionPoint:electrical:voltage`, `simready:connectionPoint:airflow:ventArea`,
+`simready:connectionPoint:network:lineRate`, `simready:connectionPoint:mechanical:boltPattern`)
 under a shared base?
 
 A flat namespace is simpler for CAD tools to emit but may become unwieldy as
@@ -403,13 +403,13 @@ formalizes the current practice:
 ```
 def Xform "fws_supply_main" {
     customData = {
-        string connectionPoint:type = "thermal"
-        string connectionPoint:direction = "supply"
-        string connectionPoint:system = "FWS"
-        double connectionPoint:portDiameter = 0.1016
-        double connectionPoint:matingDepth = 0.05
-        double connectionPoint:designFlowRate = 6.3
-        string connectionPoint:fluidType = "water"
+        string simready:connectionPoint:type = "thermal"
+        string simready:connectionPoint:direction = "supply"
+        string simready:connectionPoint:system = "FWS"
+        double simready:connectionPoint:portDiameter = 0.1016
+        double simready:connectionPoint:matingDepth = 0.05
+        double simready:connectionPoint:designFlowRate = 6.3
+        string simready:connectionPoint:fluidType = "water"
     }
 }
 ```
@@ -419,7 +419,7 @@ the feature dimension). A PLM integration pass adds the keys it knows (flow
 rate, fluid type, allowed hoses). The USD file stays simple -- no schema
 registration, no plugin dependencies, no geometry fabrication. Downstream
 tools discover connection points by looking for prims under
-`ConnectionPoints` scope with `connectionPoint:type` in `customData`.
+`ConnectionPoints` scope with `simready:connectionPoint:type` in `customData`.
 
 *Strengths:* Minimal barrier to CAD tool adoption. Any tool that can write
 `customData` can participate. PLM decoration is additive -- just append more
@@ -436,12 +436,12 @@ Instead of `customData`, connection point metadata is expressed as
 
 ```
 def Xform "fws_supply_main" {
-    float connectionPoint:portDiameter = 0.1016
-    float connectionPoint:matingDepth = 0.05
-    token connectionPoint:type = "thermal"
-    token connectionPoint:direction = "supply"
-    token connectionPoint:system = "FWS"
-    float connectionPoint:designFlowRate = 6.3
+    float simready:connectionPoint:portDiameter = 0.1016
+    float simready:connectionPoint:matingDepth = 0.05
+    token simready:connectionPoint:type = "thermal"
+    token simready:connectionPoint:direction = "supply"
+    token simready:connectionPoint:system = "FWS"
+    float simready:connectionPoint:designFlowRate = 6.3
 }
 ```
 
@@ -474,10 +474,10 @@ def Xform "fws_supply_main" (
 ) {
     uniform token[] semantics:labels:category = ["aif", "thermal", "connectionpoint"]
 
-    # Engineering properties still use the connectionPoint: namespace
-    float connectionPoint:portDiameter = 0.1016
-    token connectionPoint:type = "thermal"
-    token connectionPoint:direction = "supply"
+    # Engineering properties still use the simready:connectionPoint: namespace
+    float simready:connectionPoint:portDiameter = 0.1016
+    token simready:connectionPoint:type = "thermal"
+    token simready:connectionPoint:direction = "supply"
 }
 ```
 
@@ -494,7 +494,7 @@ adoption: assets authored with Approach 2 properties today can gain Approach 3
 discoverability later without any change to the base asset.
 
 *Weaknesses:* Adds a parallel classification surface that must stay
-synchronized with the `connectionPoint:` property namespace -- a prim's
+synchronized with the `simready:connectionPoint:` property namespace -- a prim's
 labels and its properties must agree on what kind of connection point it is.
 Authoring complexity increases because two taxonomies (label hierarchy and
 property vocabulary) must be maintained in concert. The label taxonomy is
@@ -542,12 +542,12 @@ be adopted incrementally:
 - CAD export tools emit an **Xform** at the location of each identified
   connection feature (pipe nozzle, flange, port cutout, vent opening), with
   the transform oriented per the standard axis convention. No geometry needs
-  to be fabricated -- the tool writes `connectionPoint:type = "thermal"`,
-  `connectionPoint:portDiameter = 0.1016`, and other properties it knows
+  to be fabricated -- the tool writes `simready:connectionPoint:type = "thermal"`,
+  `simready:connectionPoint:portDiameter = 0.1016`, and other properties it knows
   directly from the design feature. This is simpler than emitting a mesh prim
   and no harder than writing any other USD property.
-- Additional properties (`connectionPoint:designFlowRate`,
-  `connectionPoint:allowedFluids`, etc.) can be added through any valid
+- Additional properties (`simready:connectionPoint:designFlowRate`,
+  `simready:connectionPoint:allowedFluids`, etc.) can be added through any valid
   path -- PLM integration, direct CAD annotation, or manual editing -- in a
   composition layer that overrides or augments the initial properties through
   normal USD composition.
@@ -796,15 +796,15 @@ Example network connection point with classification properties:
 
 ```
 def Xform "OSFP1" {
-    token connectionPoint:type = "network"
-    token connectionPoint:network:medium = "fiber"
-    token connectionPoint:network:category = "high_speed_data"
-    token connectionPoint:network:fabricRole = "compute"
-    token connectionPoint:portType = "OSFP"
-    token[] connectionPoint:supportedLineRates = ["400GbE", "800GbE"]
-    token[] connectionPoint:supportedConfigurations = ["1x800G", "2x400G"]
-    token[] connectionPoint:allowedTransceivers = ["DR4", "FR4", "LR4"]
-    bool connectionPoint:hotPlugCapable = true
+    token simready:connectionPoint:type = "network"
+    token simready:connectionPoint:network:medium = "fiber"
+    token simready:connectionPoint:network:category = "high_speed_data"
+    token simready:connectionPoint:network:fabricRole = "compute"
+    token simready:connectionPoint:portType = "OSFP"
+    token[] simready:connectionPoint:supportedLineRates = ["400GbE", "800GbE"]
+    token[] simready:connectionPoint:supportedConfigurations = ["1x800G", "2x400G"]
+    token[] simready:connectionPoint:allowedTransceivers = ["DR4", "FR4", "LR4"]
+    bool simready:connectionPoint:hotPlugCapable = true
 }
 ```
 
@@ -863,10 +863,10 @@ determine a port diameter, or a plane's width to determine a vent area) are
 now explicit, typed, queryable properties -- reinforcing the separation of
 concerns between visual representation and engineering metadata.
 
-These cross-cutting properties argue strongly for a base `connectionPoint:`
+These cross-cutting properties argue strongly for a base `simready:connectionPoint:`
 property namespace that captures the shared physical interface characteristics,
-with domain-specific prefixes (e.g., `connectionPoint:thermal:`,
-`connectionPoint:electrical:`) adding their own properties. If the community
+with domain-specific prefixes (e.g., `simready:connectionPoint:thermal:`,
+`simready:connectionPoint:electrical:`) adding their own properties. If the community
 later adopts a formal applied API schema, these cross-cutting properties map
 naturally to a base `ConnectionPointAPI`.
 
@@ -1047,7 +1047,7 @@ perforations). Each thermal piping connection point provides the inlet/outlet
 conditions for a fluid circuit.
 
 The tool traverses the asset hierarchy, queries connection point Xforms by
-`connectionPoint:type` (thermal, airflow), reads the typed properties, and
+`simready:connectionPoint:type` (thermal, airflow), reads the typed properties, and
 feeds them into its boundary condition setup. It does not need the equipment's
 visual geometry at this stage -- it needs engineering parameters for boundary
 condition definition before any mesh is relevant.
@@ -1056,8 +1056,8 @@ condition definition before any mesh is relevant.
 loading heavy geometry** -- ideally before loading payloads. This argues for
 placing connection point data in a lightweight interface layer per the
 reference-payload pattern, which the existing `_ConnectionPoints.usd` sublayer
-already achieves. The tool needs typed properties (`connectionPoint:ventArea`,
-`connectionPoint:designFlowRate`), not mesh dimensions to measure.
+already achieves. The tool needs typed properties (`simready:connectionPoint:ventArea`,
+`simready:connectionPoint:designFlowRate`), not mesh dimensions to measure.
 
 ### BOM generation and cable routing
 
@@ -1068,16 +1068,16 @@ and the tool must efficiently filter the full population without traversing
 every prim in the scene graph:
 
 - **Fiber BOM** (compute/storage fabric): Filters by
-  `connectionPoint:type == "network"` and
-  `connectionPoint:network:medium == "fiber"`, reads `portType` and
+  `simready:connectionPoint:type == "network"` and
+  `simready:connectionPoint:network:medium == "fiber"`, reads `portType` and
   `allowedTransceivers`, and generates point-to-point cable schedules with
   length optimization based on physical coordinates.
 - **Copper patch schedule** (management network): Filters by
-  `connectionPoint:network:category == "management"` and
-  `connectionPoint:network:medium == "copper"`, generates copper cable runs
+  `simready:connectionPoint:network:category == "management"` and
+  `simready:connectionPoint:network:medium == "copper"`, generates copper cable runs
   with category requirements (Cat6a, Cat6).
 - **DAC cable schedule** (short-reach fabric): Filters by
-  `connectionPoint:network:medium == "DAC"`, generates direct-attach copper
+  `simready:connectionPoint:network:medium == "DAC"`, generates direct-attach copper
   cable lists with length constraints.
 
 In all cases, the tool expects connection points at a specific depth in the
@@ -1085,7 +1085,7 @@ In all cases, the tool expects connection points at a specific depth in the
 cable length calculations.
 
 **Key requirement:** Connection points must be discoverable by broad type
-(`connectionPoint:type == "network"`) and further filterable by medium,
+(`simready:connectionPoint:type == "network"`) and further filterable by medium,
 category, and fabric role without full scene graph traversal. The broad type
 query enables scene-wide network port enumeration; classification properties
 enable targeted BOM generation for specific cable schedules. This argues for
@@ -1097,7 +1097,7 @@ queries as complementary discovery mechanisms.
 Given two equipment assets placed adjacent in a facility layout, a validation
 tool checks whether their facing connection points are compatible: matching
 pipe diameters, compatible pressure ratings, aligned bolt patterns, or
-matching electrical phases and voltages. The tool queries `connectionPoint:`
+matching electrical phases and voltages. The tool queries `simready:connectionPoint:`
 properties on both sides of a proposed connection and applies compatibility
 rules from the vocabulary specification.
 
@@ -1108,7 +1108,7 @@ matches a CNC spindle's taper standard and RPM limits.
 
 **Key requirement:** Compatibility checking requires structured, typed
 properties on both sides of the connection. This is impossible with naming
-conventions alone and is the strongest argument for the `connectionPoint:`
+conventions alone and is the strongest argument for the `simready:connectionPoint:`
 property namespace. The vocabulary specification defines which properties must
 match and which must be within compatible ranges.
 
@@ -1120,8 +1120,8 @@ The AIF-to-SimReady Foundation migration defines cross-domain validators
 that check whether an asset's metadata declarations are consistent with its
 connection point prims. For example, a CDU declaring FWS/TCS piping metadata
 must have corresponding FWS/TCS connection point prims. Today these validators
-regex-match prim names; with `connectionPoint:type` and
-`connectionPoint:system` as typed properties, they become property queries --
+regex-match prim names; with `simready:connectionPoint:type` and
+`simready:connectionPoint:system` as typed properties, they become property queries --
 more robust, extensible, and not dependent on naming convention stability.
 
 **Key requirement:** Validators must be able to correlate equipment-level
@@ -1171,8 +1171,8 @@ the design feature dimensions. No geometry needs to be fabricated.
 - **Spatial extents as properties** -- Pipe diameters, connector widths, vent
   opening areas, and flange bolt circle diameters are dimensioned in the
   design. The exporter writes these as typed properties
-  (`connectionPoint:portDiameter`, `connectionPoint:ventArea`,
-  `connectionPoint:boltPatternPCD`) rather than encoding them in geometry
+  (`simready:connectionPoint:portDiameter`, `simready:connectionPoint:ventArea`,
+  `simready:connectionPoint:boltPatternPCD`) rather than encoding them in geometry
   dimensions that must be measured after the fact.
 - **Interface standards** -- When a designer specifies a CAT40 spindle taper,
   an ISO 9409-1 robot flange, or an OSFP port cutout, the standard governs
@@ -1267,7 +1267,7 @@ questions to guide the community toward one.
 
 3. **Discoverability without heavy infrastructure.** Connection points should
    be discoverable through standardized conventions -- a well-known property
-   namespace (e.g., `connectionPoint:`), a well-known scope prim
+   namespace (e.g., `simready:connectionPoint:`), a well-known scope prim
    (`ConnectionPoints`), and a well-known purpose (`guide`). This
    discoverability should not require a schema plugin to be installed. A
    formal applied API schema may be a future step, but discoverability should
@@ -1287,8 +1287,8 @@ questions to guide the community toward one.
    typed properties -- without requiring schema plugin dependencies, complex
    registration, or geometry fabrication. A CAD tool that identifies a pipe
    flange should be able to emit an Xform with
-   `connectionPoint:type = "thermal"` and
-   `connectionPoint:portDiameter = 0.1016` as easily as it writes any other
+   `simready:connectionPoint:type = "thermal"` and
+   `simready:connectionPoint:portDiameter = 0.1016` as easily as it writes any other
    USD property. Emitting an Xform with properties is simpler than
    constructing a correctly tessellated mesh prim.
 
@@ -1327,7 +1327,7 @@ workflows above inform how each principle applies:
 | **Reference-Payload pattern** | Connection point metadata belongs in the lightweight interface layer, accessible before loading payloads. CFD tools and BOM generators need engineering parameters before any geometry is relevant. The existing `_ConnectionPoints.usd` sublayer already achieves this separation -- the vocabulary formalizes it. |
 | **`defaultPrim` and entrypoints** | The `ConnectionPoints` scope prim lives under the asset's `defaultPrim`, not alongside it. Tools discover it via a well-known child scope name under the asset root. |
 | **Model hierarchy and `kind`** | Connection points are sub-component detail, below the `component` kind boundary. They do not participate in `kind`-based traversal; they are found by descending into a known scope within a component. |
-| **Naming conventions** | The property namespace (`connectionPoint:thermal:flowRate`) uses only valid USD property name characters. Prim names for individual connection points follow the restricted character set from the principles document. The migration from current vendor-prefixed prim names (`vertiv_fws_supply_piping_connection_main`) to cleaner identifiers should reference these conventions. |
+| **Naming conventions** | The property namespace (`simready:connectionPoint:thermal:flowRate`) uses only valid USD property name characters. Prim names for individual connection points follow the restricted character set from the principles document. The migration from current vendor-prefixed prim names (`vertiv_fws_supply_piping_connection_main`) to cleaner identifiers should reference these conventions. |
 
 **Discoverability** -- flagged as the most important aspect by stakeholders --
 is served by complementary mechanisms:
@@ -1336,7 +1336,7 @@ is served by complementary mechanisms:
    by looking for the well-known `ConnectionPoints` child scope under the
    `defaultPrim`. This works for hierarchy-aware traversal.
 2. **Property namespace discovery:** A tool can query for any prim carrying
-   `connectionPoint:` properties, regardless of where it sits in the hierarchy.
+   `simready:connectionPoint:` properties, regardless of where it sits in the hierarchy.
    This works for scene-wide queries across multiple assets.
 3. **Semantic label discovery (future/complementary):** USD's built-in
    `SemanticsLabelsAPI` can classify prims with labels like
@@ -1353,9 +1353,9 @@ geometry loading.
 
 ### Open questions for discussion
 
-1. **Base vocabulary scope.** What belongs in the base `connectionPoint:`
+1. **Base vocabulary scope.** What belongs in the base `simready:connectionPoint:`
    namespace vs. domain-specific property prefixes (e.g.,
-   `connectionPoint:thermal:`, `connectionPoint:electrical:`)? Candidates for
+   `simready:connectionPoint:thermal:`, `simready:connectionPoint:electrical:`)? Candidates for
    the base: connection type, direction, system identifier, the spatial extent
    properties (port diameter, mating depth, service clearance), and the
    cross-cutting mechanical properties (insertion force, mated cycle count,
@@ -1532,27 +1532,27 @@ def Xform "fws_supply_main" {
     string sourceId:cadSystem = "SolidWorks"
 
     # Connection point domain properties (this proposal)
-    token connectionPoint:type = "thermal"
-    token connectionPoint:direction = "supply"
-    token connectionPoint:system = "FWS"
-    float connectionPoint:portDiameter = 0.1016
-    float connectionPoint:matingDepth = 0.05
-    float connectionPoint:designFlowRate = 6.3
-    token connectionPoint:fluidType = "water"
-    token connectionPoint:disconnectType = "flanged"
-    token connectionPoint:flangeRating = "ANSI_150"
+    token simready:connectionPoint:type = "thermal"
+    token simready:connectionPoint:direction = "supply"
+    token simready:connectionPoint:system = "FWS"
+    float simready:connectionPoint:portDiameter = 0.1016
+    float simready:connectionPoint:matingDepth = 0.05
+    float simready:connectionPoint:designFlowRate = 6.3
+    token simready:connectionPoint:fluidType = "water"
+    token simready:connectionPoint:disconnectType = "flanged"
+    token simready:connectionPoint:flangeRating = "ANSI_150"
 }
 ```
 
 In this model, a CAD exporter authors `sourceId:` properties (tracing back to
-the design feature) and spatial properties (`connectionPoint:portDiameter`
+the design feature) and spatial properties (`simready:connectionPoint:portDiameter`
 from the design geometry). A PLM integration adds operating parameters
-(`connectionPoint:designFlowRate`, `connectionPoint:flangeRating`) in a
+(`simready:connectionPoint:designFlowRate`, `simready:connectionPoint:flangeRating`) in a
 stronger composition layer. Both namespaces compose independently and are
 queryable by any tool that understands the namespace convention.
 
 A joint vocabulary specification covering both `sourceId:` and
-`connectionPoint:` namespaces would demonstrate that this pattern generalizes
+`simready:connectionPoint:` namespaces would demonstrate that this pattern generalizes
 to any domain-specific metadata that needs to attach to USD prims.
 
 ### Other related efforts
@@ -1567,7 +1567,7 @@ to any domain-specific metadata that needs to attach to USD prims.
   point completeness, property ranges, and compatibility without a formal
   schema plugin. The AIF-to-SimReady migration already defines cross-domain
   validators (TC.002, EL.004) that check metadata-to-connection-point
-  consistency; the `connectionPoint:` property namespace would make these
+  consistency; the `simready:connectionPoint:` property namespace would make these
   checks more robust by replacing name-pattern matching with property queries.
 
 - **USD Physics Schema** -- Demonstrates the pattern of applied API schemas

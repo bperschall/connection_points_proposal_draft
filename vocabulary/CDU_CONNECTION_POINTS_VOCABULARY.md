@@ -1,6 +1,6 @@
 # Connection Points Vocabulary: CDU Exemplar
 
-Copyright &copy; 2026, NVIDIA Corporation, version 0.2.0 (DRAFT), May 11, 2026
+Copyright &copy; 2026, NVIDIA Corporation, version 0.2.0 (DRAFT), May 12, 2026
 
 **Parent specification:** [Connection Points Vocabulary Spec v0.2.0](CONNECTION_POINTS_VOCABULARY_SPEC.md)
 
@@ -75,26 +75,26 @@ def Xform "fws_supply_main" (
 )
 {
     # Semantic identity (base namespace)
-    token connectionPoint:domain = "thermal"
-    token connectionPoint:direction = "supply"
-    token connectionPoint:system = "FWS"
-    token connectionPoint:disconnectType = "flanged"
-    float connectionPoint:serviceClearance = 0.3
+    token simready:connectionPoint:domain = "thermal"
+    token simready:connectionPoint:direction = "supply"
+    token simready:connectionPoint:system = "FWS"
+    token simready:connectionPoint:disconnectType = "flanged"
+    float simready:connectionPoint:serviceClearance = 0.3
 
     # Physical connection geometry (thermal domain)
-    float connectionPoint:thermal:portDiameter = 0.1016
-    float connectionPoint:thermal:matingDepth = 0.05
+    float simready:connectionPoint:thermal:portDiameter = 0.1016
+    float simready:connectionPoint:thermal:matingDepth = 0.05
 
     # Operating parameters (thermal domain)
-    float connectionPoint:thermal:designFlowRate = 6.3
-    float connectionPoint:thermal:maxFlowRate = 8.0
-    float connectionPoint:thermal:designTemperature = 7.2
-    float connectionPoint:thermal:maxTemperature = 45.0
-    float connectionPoint:thermal:operatingPressure = 1034000
-    float connectionPoint:thermal:maxPressure = 1500000
-    token connectionPoint:thermal:fluidType = "water"
-    token connectionPoint:thermal:flangeRating = "ANSI_150"
-    token connectionPoint:thermal:flangeSize = "NPS4"
+    float simready:connectionPoint:thermal:designFlowRate = 6.3
+    float simready:connectionPoint:thermal:maxFlowRate = 8.0
+    float simready:connectionPoint:thermal:designTemperature = 7.2
+    float simready:connectionPoint:thermal:maxTemperature = 45.0
+    float simready:connectionPoint:thermal:operatingPressure = 1034000
+    float simready:connectionPoint:thermal:maxPressure = 1500000
+    token simready:connectionPoint:thermal:fluidType = "water"
+    token simready:connectionPoint:thermal:flangeRating = "ANSI_150"
+    token simready:connectionPoint:thermal:flangeSize = "NPS4"
 }
 ```
 
@@ -110,26 +110,26 @@ def Xform "fws_return_main" (
 )
 {
     # Semantic identity (base namespace)
-    token connectionPoint:domain = "thermal"
-    token connectionPoint:direction = "return"
-    token connectionPoint:system = "FWS"
-    token connectionPoint:disconnectType = "flanged"
-    float connectionPoint:serviceClearance = 0.3
+    token simready:connectionPoint:domain = "thermal"
+    token simready:connectionPoint:direction = "return"
+    token simready:connectionPoint:system = "FWS"
+    token simready:connectionPoint:disconnectType = "flanged"
+    float simready:connectionPoint:serviceClearance = 0.3
 
     # Physical connection geometry (thermal domain)
-    float connectionPoint:thermal:portDiameter = 0.1016
-    float connectionPoint:thermal:matingDepth = 0.05
+    float simready:connectionPoint:thermal:portDiameter = 0.1016
+    float simready:connectionPoint:thermal:matingDepth = 0.05
 
     # Operating parameters (thermal domain)
-    float connectionPoint:thermal:designFlowRate = 6.3
-    float connectionPoint:thermal:maxFlowRate = 8.0
-    float connectionPoint:thermal:designTemperature = 17.2
-    float connectionPoint:thermal:maxTemperature = 55.0
-    float connectionPoint:thermal:operatingPressure = 896000
-    float connectionPoint:thermal:maxPressure = 1500000
-    token connectionPoint:thermal:fluidType = "water"
-    token connectionPoint:thermal:flangeRating = "ANSI_150"
-    token connectionPoint:thermal:flangeSize = "NPS4"
+    float simready:connectionPoint:thermal:designFlowRate = 6.3
+    float simready:connectionPoint:thermal:maxFlowRate = 8.0
+    float simready:connectionPoint:thermal:designTemperature = 17.2
+    float simready:connectionPoint:thermal:maxTemperature = 55.0
+    float simready:connectionPoint:thermal:operatingPressure = 896000
+    float simready:connectionPoint:thermal:maxPressure = 1500000
+    token simready:connectionPoint:thermal:fluidType = "water"
+    token simready:connectionPoint:thermal:flangeRating = "ANSI_150"
+    token simready:connectionPoint:thermal:flangeSize = "NPS4"
 }
 ```
 
@@ -145,26 +145,26 @@ def Xform "tcs_supply_main" (
 )
 {
     # Semantic identity (base namespace)
-    token connectionPoint:domain = "thermal"
-    token connectionPoint:direction = "supply"
-    token connectionPoint:system = "TCS"
-    token connectionPoint:disconnectType = "quick_disconnect"
-    float connectionPoint:serviceClearance = 0.25
+    token simready:connectionPoint:domain = "thermal"
+    token simready:connectionPoint:direction = "supply"
+    token simready:connectionPoint:system = "TCS"
+    token simready:connectionPoint:disconnectType = "quick_disconnect"
+    float simready:connectionPoint:serviceClearance = 0.25
 
     # Physical connection geometry (thermal domain)
-    float connectionPoint:thermal:portDiameter = 0.0762
-    float connectionPoint:thermal:matingDepth = 0.04
+    float simready:connectionPoint:thermal:portDiameter = 0.0762
+    float simready:connectionPoint:thermal:matingDepth = 0.04
 
     # Operating parameters (thermal domain)
-    float connectionPoint:thermal:designFlowRate = 5.8
-    float connectionPoint:thermal:maxFlowRate = 7.5
-    float connectionPoint:thermal:designTemperature = 12.0
-    float connectionPoint:thermal:maxTemperature = 50.0
-    float connectionPoint:thermal:operatingPressure = 689000
-    float connectionPoint:thermal:maxPressure = 1000000
-    token connectionPoint:thermal:fluidType = "glycol_water_30"
-    token connectionPoint:thermal:flangeRating = "none"
-    token connectionPoint:thermal:flangeSize = "none"
+    float simready:connectionPoint:thermal:designFlowRate = 5.8
+    float simready:connectionPoint:thermal:maxFlowRate = 7.5
+    float simready:connectionPoint:thermal:designTemperature = 12.0
+    float simready:connectionPoint:thermal:maxTemperature = 50.0
+    float simready:connectionPoint:thermal:operatingPressure = 689000
+    float simready:connectionPoint:thermal:maxPressure = 1000000
+    token simready:connectionPoint:thermal:fluidType = "glycol_water_30"
+    token simready:connectionPoint:thermal:flangeRating = "none"
+    token simready:connectionPoint:thermal:flangeSize = "none"
 }
 ```
 
@@ -180,26 +180,26 @@ def Xform "tcs_return_main" (
 )
 {
     # Semantic identity (base namespace)
-    token connectionPoint:domain = "thermal"
-    token connectionPoint:direction = "return"
-    token connectionPoint:system = "TCS"
-    token connectionPoint:disconnectType = "quick_disconnect"
-    float connectionPoint:serviceClearance = 0.25
+    token simready:connectionPoint:domain = "thermal"
+    token simready:connectionPoint:direction = "return"
+    token simready:connectionPoint:system = "TCS"
+    token simready:connectionPoint:disconnectType = "quick_disconnect"
+    float simready:connectionPoint:serviceClearance = 0.25
 
     # Physical connection geometry (thermal domain)
-    float connectionPoint:thermal:portDiameter = 0.0762
-    float connectionPoint:thermal:matingDepth = 0.04
+    float simready:connectionPoint:thermal:portDiameter = 0.0762
+    float simready:connectionPoint:thermal:matingDepth = 0.04
 
     # Operating parameters (thermal domain)
-    float connectionPoint:thermal:designFlowRate = 5.8
-    float connectionPoint:thermal:maxFlowRate = 7.5
-    float connectionPoint:thermal:designTemperature = 32.0
-    float connectionPoint:thermal:maxTemperature = 60.0
-    float connectionPoint:thermal:operatingPressure = 552000
-    float connectionPoint:thermal:maxPressure = 1000000
-    token connectionPoint:thermal:fluidType = "glycol_water_30"
-    token connectionPoint:thermal:flangeRating = "none"
-    token connectionPoint:thermal:flangeSize = "none"
+    float simready:connectionPoint:thermal:designFlowRate = 5.8
+    float simready:connectionPoint:thermal:maxFlowRate = 7.5
+    float simready:connectionPoint:thermal:designTemperature = 32.0
+    float simready:connectionPoint:thermal:maxTemperature = 60.0
+    float simready:connectionPoint:thermal:operatingPressure = 552000
+    float simready:connectionPoint:thermal:maxPressure = 1000000
+    token simready:connectionPoint:thermal:fluidType = "glycol_water_30"
+    token simready:connectionPoint:thermal:flangeRating = "none"
+    token simready:connectionPoint:thermal:flangeSize = "none"
 }
 ```
 
@@ -219,24 +219,24 @@ def Xform "power_input_main" (
 )
 {
     # Semantic identity (base namespace)
-    token connectionPoint:domain = "electrical"
-    token connectionPoint:direction = "input"
-    token connectionPoint:system = "power"
-    token connectionPoint:disconnectType = "hardwired"
-    float connectionPoint:serviceClearance = 0.4
+    token simready:connectionPoint:domain = "electrical"
+    token simready:connectionPoint:direction = "input"
+    token simready:connectionPoint:system = "power"
+    token simready:connectionPoint:disconnectType = "hardwired"
+    float simready:connectionPoint:serviceClearance = 0.4
 
     # Physical connection geometry (electrical domain)
-    float connectionPoint:electrical:matingDepth = 0.0
+    float simready:connectionPoint:electrical:matingDepth = 0.0
 
     # Operating parameters (electrical domain)
-    float connectionPoint:electrical:nominalVoltage = 480.0
-    float connectionPoint:electrical:maxCurrent = 60.0
-    int connectionPoint:electrical:phases = 3
-    float connectionPoint:electrical:frequency = 60.0
-    token connectionPoint:electrical:connectorType = "hardwired"
-    float connectionPoint:electrical:ratedPower = 28800.0
-    float connectionPoint:electrical:breakerRating = 80.0
-    float connectionPoint:electrical:powerFactor = 0.95
+    float simready:connectionPoint:electrical:nominalVoltage = 480.0
+    float simready:connectionPoint:electrical:maxCurrent = 60.0
+    int simready:connectionPoint:electrical:phases = 3
+    float simready:connectionPoint:electrical:frequency = 60.0
+    token simready:connectionPoint:electrical:connectorType = "hardwired"
+    float simready:connectionPoint:electrical:ratedPower = 28800.0
+    float simready:connectionPoint:electrical:breakerRating = 80.0
+    float simready:connectionPoint:electrical:powerFactor = 0.95
 }
 ```
 
@@ -255,27 +255,27 @@ def Xform "bms_network_main" (
 )
 {
     # Semantic identity (base namespace)
-    token connectionPoint:domain = "network"
-    token connectionPoint:direction = "bidirectional"
-    token connectionPoint:system = "BMS"
-    token connectionPoint:disconnectType = "RJ45"
-    float connectionPoint:serviceClearance = 0.15
+    token simready:connectionPoint:domain = "network"
+    token simready:connectionPoint:direction = "bidirectional"
+    token simready:connectionPoint:system = "BMS"
+    token simready:connectionPoint:disconnectType = "RJ45"
+    float simready:connectionPoint:serviceClearance = 0.15
 
     # Physical connection geometry (network domain)
-    float connectionPoint:network:portWidth = 0.01118
-    float connectionPoint:network:portHeight = 0.0064
-    float connectionPoint:network:matingDepth = 0.011
+    float simready:connectionPoint:network:portWidth = 0.01118
+    float simready:connectionPoint:network:portHeight = 0.0064
+    float simready:connectionPoint:network:matingDepth = 0.011
 
     # Operating parameters (network domain)
-    token connectionPoint:network:portType = "RJ45"
-    token connectionPoint:network:protocol = "BACnet_IP"
-    token connectionPoint:network:dataRate = "100Mbps"
-    token connectionPoint:network:medium = "copper"
-    token connectionPoint:network:fabricRole = "bms"
-    token[] connectionPoint:network:supportedLineRates = ["100Mbps"]
-    token[] connectionPoint:network:supportedConfigurations = []
-    token[] connectionPoint:network:allowedTransceivers = []
-    bool connectionPoint:network:hotPlugCapable = true
+    token simready:connectionPoint:network:portType = "RJ45"
+    token simready:connectionPoint:network:protocol = "BACnet_IP"
+    token simready:connectionPoint:network:dataRate = "100Mbps"
+    token simready:connectionPoint:network:medium = "copper"
+    token simready:connectionPoint:network:fabricRole = "bms"
+    token[] simready:connectionPoint:network:supportedLineRates = ["100Mbps"]
+    token[] simready:connectionPoint:network:supportedConfigurations = []
+    token[] simready:connectionPoint:network:allowedTransceivers = []
+    bool simready:connectionPoint:network:hotPlugCapable = true
 }
 ```
 
@@ -301,24 +301,24 @@ def Xform "air_intake_main" (
 )
 {
     # Semantic identity (base namespace)
-    token connectionPoint:domain = "airflow"
-    token connectionPoint:direction = "input"
-    token connectionPoint:system = "equipment_cooling"
-    token connectionPoint:disconnectType = "open_vent"
-    float connectionPoint:serviceClearance = 0.3
+    token simready:connectionPoint:domain = "airflow"
+    token simready:connectionPoint:direction = "input"
+    token simready:connectionPoint:system = "equipment_cooling"
+    token simready:connectionPoint:disconnectType = "open_vent"
+    float simready:connectionPoint:serviceClearance = 0.3
 
     # Physical connection geometry (airflow domain)
-    float connectionPoint:airflow:interfaceWidth = 0.45
-    float connectionPoint:airflow:interfaceHeight = 0.30
-    float connectionPoint:airflow:freeAreaRatio = 0.5
+    float simready:connectionPoint:airflow:interfaceWidth = 0.45
+    float simready:connectionPoint:airflow:interfaceHeight = 0.30
+    float simready:connectionPoint:airflow:freeAreaRatio = 0.5
 
     # Operating parameters (airflow domain)
-    float connectionPoint:airflow:designAirflowRate = 0.35
-    float connectionPoint:airflow:maxAirflowRate = 0.50
-    float connectionPoint:airflow:designTemperature = 24.0
-    float connectionPoint:airflow:maxTemperature = 35.0
-    float connectionPoint:airflow:staticPressure = 25.0
-    token connectionPoint:airflow:filterType = "MERV_8"
+    float simready:connectionPoint:airflow:designAirflowRate = 0.35
+    float simready:connectionPoint:airflow:maxAirflowRate = 0.50
+    float simready:connectionPoint:airflow:designTemperature = 24.0
+    float simready:connectionPoint:airflow:maxTemperature = 35.0
+    float simready:connectionPoint:airflow:staticPressure = 25.0
+    token simready:connectionPoint:airflow:filterType = "MERV_8"
 }
 ```
 
@@ -338,24 +338,24 @@ def Xform "air_exhaust_main" (
 )
 {
     # Semantic identity (base namespace)
-    token connectionPoint:domain = "airflow"
-    token connectionPoint:direction = "output"
-    token connectionPoint:system = "equipment_cooling"
-    token connectionPoint:disconnectType = "open_vent"
-    float connectionPoint:serviceClearance = 0.15
+    token simready:connectionPoint:domain = "airflow"
+    token simready:connectionPoint:direction = "output"
+    token simready:connectionPoint:system = "equipment_cooling"
+    token simready:connectionPoint:disconnectType = "open_vent"
+    float simready:connectionPoint:serviceClearance = 0.15
 
     # Physical connection geometry (airflow domain)
-    float connectionPoint:airflow:interfaceWidth = 0.40
-    float connectionPoint:airflow:interfaceHeight = 0.25
-    float connectionPoint:airflow:freeAreaRatio = 0.6
+    float simready:connectionPoint:airflow:interfaceWidth = 0.40
+    float simready:connectionPoint:airflow:interfaceHeight = 0.25
+    float simready:connectionPoint:airflow:freeAreaRatio = 0.6
 
     # Operating parameters (airflow domain)
-    float connectionPoint:airflow:designAirflowRate = 0.35
-    float connectionPoint:airflow:maxAirflowRate = 0.50
-    float connectionPoint:airflow:designTemperature = 35.0
-    float connectionPoint:airflow:maxTemperature = 45.0
-    float connectionPoint:airflow:staticPressure = 20.0
-    token connectionPoint:airflow:filterType = "none"
+    float simready:connectionPoint:airflow:designAirflowRate = 0.35
+    float simready:connectionPoint:airflow:maxAirflowRate = 0.50
+    float simready:connectionPoint:airflow:designTemperature = 35.0
+    float simready:connectionPoint:airflow:maxTemperature = 45.0
+    float simready:connectionPoint:airflow:staticPressure = 20.0
+    token simready:connectionPoint:airflow:filterType = "none"
 }
 ```
 

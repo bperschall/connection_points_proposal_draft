@@ -11,7 +11,7 @@ recommendation aligned with the proposal's direction.
 
 ## Q1: Base vocabulary scope
 
-**What belongs in the base `connectionPoint:` namespace vs. domain-specific
+**What belongs in the base `simready:connectionPoint:` namespace vs. domain-specific
 prefixes?**
 
 ### Context
@@ -28,26 +28,26 @@ care about.
 ```usda
 def Xform "fws_supply_main" {
     # --- Base namespace (shared across ALL domains) ---
-    token connectionPoint:type = "thermal"
-    token connectionPoint:direction = "supply"
-    token connectionPoint:system = "FWS"
-    float connectionPoint:portDiameter = 0.1016
-    float connectionPoint:matingDepth = 0.05
-    float connectionPoint:serviceClearance = 0.3
-    token connectionPoint:disconnectType = "flanged"
+    token simready:connectionPoint:type = "thermal"
+    token simready:connectionPoint:direction = "supply"
+    token simready:connectionPoint:system = "FWS"
+    float simready:connectionPoint:portDiameter = 0.1016
+    float simready:connectionPoint:matingDepth = 0.05
+    float simready:connectionPoint:serviceClearance = 0.3
+    token simready:connectionPoint:disconnectType = "flanged"
 
     # --- Domain-specific namespace (thermal only) ---
-    float connectionPoint:thermal:designFlowRate = 6.3
-    float connectionPoint:thermal:designTemperature = 7.2
-    float connectionPoint:thermal:operatingPressure = 1034000
-    token connectionPoint:thermal:fluidType = "water"
-    token connectionPoint:thermal:flangeRating = "ANSI_150"
+    float simready:connectionPoint:thermal:designFlowRate = 6.3
+    float simready:connectionPoint:thermal:designTemperature = 7.2
+    float simready:connectionPoint:thermal:operatingPressure = 1034000
+    token simready:connectionPoint:thermal:fluidType = "water"
+    token simready:connectionPoint:thermal:flangeRating = "ANSI_150"
 }
 ```
 
 ### Strawman recommendation
 
-The base `connectionPoint:` namespace includes: `type`, `direction`, `system`,
+The base `simready:connectionPoint:` namespace includes: `type`, `direction`, `system`,
 `portDiameter`, `ventArea`, `matingDepth`, `serviceClearance`,
 `disconnectType`, and the cross-cutting mechanical properties (insertion force,
 keying, temperature rating, material). Everything else goes under a domain
@@ -82,22 +82,22 @@ interface.
 
 ```usda
 def Xform "wrist_tool_changer" {
-    token connectionPoint:type = "multi_domain"
-    token connectionPoint:direction = "mate"
-    token[] connectionPoint:domains = ["mechanical", "pneumatic", "electrical"]
+    token simready:connectionPoint:type = "multi_domain"
+    token simready:connectionPoint:direction = "mate"
+    token[] simready:connectionPoint:domains = ["mechanical", "pneumatic", "electrical"]
 
     # Mechanical properties
-    token connectionPoint:mechanical:interfaceStandard = "ATI_QC21"
-    token connectionPoint:mechanical:boltPattern = "ISO_9409-1-50-4-M6"
-    float connectionPoint:mechanical:payloadRating = 10.0
+    token simready:connectionPoint:mechanical:interfaceStandard = "ATI_QC21"
+    token simready:connectionPoint:mechanical:boltPattern = "ISO_9409-1-50-4-M6"
+    float simready:connectionPoint:mechanical:payloadRating = 10.0
 
     # Pneumatic properties
-    int connectionPoint:mechanical:pneumaticPorts = 6
-    float connectionPoint:mechanical:pneumaticPressure = 620000
+    int simready:connectionPoint:mechanical:pneumaticPorts = 6
+    float simready:connectionPoint:mechanical:pneumaticPressure = 620000
 
     # Electrical pass-through
-    int connectionPoint:electrical:pinCount = 12
-    token connectionPoint:electrical:signalType = "24VDC_digital"
+    int simready:connectionPoint:electrical:pinCount = 12
+    token simready:connectionPoint:electrical:signalType = "24VDC_digital"
 }
 ```
 
@@ -106,17 +106,17 @@ def Xform "wrist_tool_changer" {
 ```usda
 def Xform "wrist_tool_changer" {
     def Xform "mechanical" {
-        token connectionPoint:type = "mechanical"
-        token connectionPoint:mechanical:interfaceStandard = "ATI_QC21"
-        float connectionPoint:mechanical:payloadRating = 10.0
+        token simready:connectionPoint:type = "mechanical"
+        token simready:connectionPoint:mechanical:interfaceStandard = "ATI_QC21"
+        float simready:connectionPoint:mechanical:payloadRating = 10.0
     }
     def Xform "pneumatic" {
-        token connectionPoint:type = "thermal"
-        int connectionPoint:thermal:portCount = 6
+        token simready:connectionPoint:type = "thermal"
+        int simready:connectionPoint:thermal:portCount = 6
     }
     def Xform "electrical" {
-        token connectionPoint:type = "electrical"
-        int connectionPoint:electrical:pinCount = 12
+        token simready:connectionPoint:type = "electrical"
+        int simready:connectionPoint:electrical:pinCount = 12
     }
 }
 ```
@@ -177,18 +177,18 @@ organizational hierarchy.
 def Xform "robot_arm" {
     def Xform "wrist_mount" {
         # Mechanical connection semantics annotated directly
-        token connectionPoint:type = "mechanical"
-        token connectionPoint:mechanical:interfaceStandard = "ATI_QC21"
+        token simready:connectionPoint:type = "mechanical"
+        token simready:connectionPoint:mechanical:interfaceStandard = "ATI_QC21"
     }
     def Xform "pneumatic_hose_fitting" {
         # Pneumatic connection semantics annotated directly
-        token connectionPoint:type = "pneumatic"
-        int connectionPoint:pneumatic:portCount = 6
+        token simready:connectionPoint:type = "pneumatic"
+        int simready:connectionPoint:pneumatic:portCount = 6
     }
     def Xform "electrical_harness_plug" {
         # Electrical connection semantics annotated directly
-        token connectionPoint:type = "electrical"
-        int connectionPoint:electrical:pinCount = 12
+        token simready:connectionPoint:type = "electrical"
+        int simready:connectionPoint:electrical:pinCount = 12
     }
 }
 ```
@@ -243,9 +243,9 @@ compatible properties.
 def Xform "CDU_01" {
     def Xform "ConnectionPoints" {
         def Xform "fws_supply_out" {
-            token connectionPoint:type = "thermal"
-            token connectionPoint:direction = "supply"
-            rel connectionPoint:matedTo = </Facility/RackRow_01/Rack_01/ConnectionPoints/fws_supply_in>
+            token simready:connectionPoint:type = "thermal"
+            token simready:connectionPoint:direction = "supply"
+            rel simready:connectionPoint:matedTo = </Facility/RackRow_01/Rack_01/ConnectionPoints/fws_supply_in>
         }
     }
 }
@@ -285,7 +285,7 @@ Connection relationships are out of scope for v0.2.0.
 
 1. **Orchestration-layer problem, not a single-asset concern.** The group
    reached consensus that explicit connection relationships (e.g.,
-   `rel connectionPoint:matedTo`) belong to the facility layout or routing
+   `rel simready:connectionPoint:matedTo`) belong to the facility layout or routing
    tool, not the single-asset specification. A single asset should describe its
    own interfaces; how those interfaces connect to other assets is a scene
    composition problem.
@@ -400,9 +400,9 @@ real content."
 def Xform "fws_supply_main"
 {
     uniform token purpose = "guide"
-    token connectionPoint:type = "thermal"
-    token connectionPoint:direction = "supply"
-    float connectionPoint:portDiameter = 0.1016
+    token simready:connectionPoint:type = "thermal"
+    token simready:connectionPoint:direction = "supply"
+    float simready:connectionPoint:portDiameter = 0.1016
 }
 ```
 
@@ -410,7 +410,7 @@ def Xform "fws_supply_main"
 
 Recommend `guide` purpose (SHOULD) on connection point Xforms, but do not
 mandate it (MUST). The benefit is real: it provides a second discovery and
-filtering mechanism beyond the `connectionPoint:` namespace, and maintains
+filtering mechanism beyond the `simready:connectionPoint:` namespace, and maintains
 continuity with the existing workflow. However, `guide` purpose cascades to
 descendant prims via USD's computed purpose inheritance (see investigation
 below), which means any renderable geometry placed beneath a `guide` connection
@@ -452,7 +452,7 @@ Jason Batchkoff raised in the April 28 meeting.
 For v0.2.0 connection points, this constraint is acceptable because:
 
 1. Connection point Xforms are metadata carriers, not geometry containers. They
-   hold `connectionPoint:` properties and a transform -- no child geometry is
+   hold `simready:connectionPoint:` properties and a transform -- no child geometry is
    expected.
 2. The `ConnectionPoints` scope already separates connection point prims from
    the asset's renderable hierarchy.
@@ -494,11 +494,11 @@ meters), you get a compatibility mismatch for the same physical dimension.
 
 ```usda
 # Option A: Enforce SI units (meters, Pascals, kg, etc.)
-float connectionPoint:portDiameter = 0.1016        # Always meters
+float simready:connectionPoint:portDiameter = 0.1016        # Always meters
 
 # Option B: Unit annotations per property
-float connectionPoint:portDiameter = 4.0
-token connectionPoint:portDiameter:unit = "inch"    # Explicit unit tag
+float simready:connectionPoint:portDiameter = 4.0
+token simready:connectionPoint:portDiameter:unit = "inch"    # Explicit unit tag
 
 # Option C: Defer to USD's existing metersPerUnit
 # (USD stages declare metersPerUnit at the stage level,
@@ -595,11 +595,11 @@ def Mesh "vertiv_fws_supply_piping_connection_main" (
 def Xform "fws_supply_main" (
     purpose = "guide"
 ) {
-    token connectionPoint:type = "thermal"
-    token connectionPoint:direction = "supply"
-    token connectionPoint:system = "FWS"
-    float connectionPoint:portDiameter = 0.1016
-    float connectionPoint:thermal:designFlowRate = 6.3
+    token simready:connectionPoint:type = "thermal"
+    token simready:connectionPoint:direction = "supply"
+    token simready:connectionPoint:system = "FWS"
+    float simready:connectionPoint:portDiameter = 0.1016
+    float simready:connectionPoint:thermal:designFlowRate = 6.3
 }
 ```
 
@@ -646,20 +646,20 @@ of the data is available.
 # Step 1: CAD exporter creates the connection point
 # (knows geometry, doesn't know operating parameters)
 def Xform "fws_supply_main" {
-    token connectionPoint:type = "thermal"
-    token connectionPoint:direction = "supply"
-    float connectionPoint:portDiameter = 0.1016
-    float connectionPoint:matingDepth = 0.05
-    token connectionPoint:disconnectType = "flanged"
+    token simready:connectionPoint:type = "thermal"
+    token simready:connectionPoint:direction = "supply"
+    float simready:connectionPoint:portDiameter = 0.1016
+    float simready:connectionPoint:matingDepth = 0.05
+    token simready:connectionPoint:disconnectType = "flanged"
 }
 
 # Step 2: PLM integration adds operating parameters in a stronger layer
 over "fws_supply_main" {
-    token connectionPoint:system = "FWS"
-    float connectionPoint:thermal:designFlowRate = 6.3
-    float connectionPoint:thermal:operatingPressure = 1034000
-    token connectionPoint:thermal:fluidType = "water"
-    token connectionPoint:thermal:flangeRating = "ANSI_150"
+    token simready:connectionPoint:system = "FWS"
+    float simready:connectionPoint:thermal:designFlowRate = 6.3
+    float simready:connectionPoint:thermal:operatingPressure = 1034000
+    token simready:connectionPoint:thermal:fluidType = "water"
+    token simready:connectionPoint:thermal:flangeRating = "ANSI_150"
 }
 ```
 
@@ -705,38 +705,38 @@ network architect designing the topology.
 ```usda
 def Xform "ConnectionPoints" {
     def Xform "OSFP1" {
-        token connectionPoint:type = "network"
-        token connectionPoint:portType = "OSFP"
-        token connectionPoint:network:medium = "fiber"
-        token connectionPoint:network:category = "high_speed_data"
-        token connectionPoint:network:fabricRole = "compute"
+        token simready:connectionPoint:type = "network"
+        token simready:connectionPoint:portType = "OSFP"
+        token simready:connectionPoint:network:medium = "fiber"
+        token simready:connectionPoint:network:category = "high_speed_data"
+        token simready:connectionPoint:network:fabricRole = "compute"
 
         # Physical identity (what's printed on the hardware)
-        token connectionPoint:physicalLabel = "OSFP1"
+        token simready:connectionPoint:physicalLabel = "OSFP1"
 
         # Logical identity (from the network design / SysML model)
-        token connectionPoint:network:logicalName = "C1"
-        token connectionPoint:network:switchPort = "Leaf01/Eth1/1"
+        token simready:connectionPoint:network:logicalName = "C1"
+        token simready:connectionPoint:network:switchPort = "Leaf01/Eth1/1"
     }
 
     def Xform "OSFP2" {
-        token connectionPoint:type = "network"
-        token connectionPoint:portType = "OSFP"
-        token connectionPoint:network:medium = "fiber"
-        token connectionPoint:network:fabricRole = "compute"
-        token connectionPoint:physicalLabel = "OSFP2"
-        token connectionPoint:network:logicalName = "C2"
-        token connectionPoint:network:switchPort = "Leaf01/Eth1/2"
+        token simready:connectionPoint:type = "network"
+        token simready:connectionPoint:portType = "OSFP"
+        token simready:connectionPoint:network:medium = "fiber"
+        token simready:connectionPoint:network:fabricRole = "compute"
+        token simready:connectionPoint:physicalLabel = "OSFP2"
+        token simready:connectionPoint:network:logicalName = "C2"
+        token simready:connectionPoint:network:switchPort = "Leaf01/Eth1/2"
     }
 
     def Xform "ETH1" {
-        token connectionPoint:type = "network"
-        token connectionPoint:portType = "RJ45"
-        token connectionPoint:network:medium = "copper"
-        token connectionPoint:network:category = "management"
-        token connectionPoint:network:fabricRole = "out_of_band"
-        token connectionPoint:physicalLabel = "ETH1"
-        token connectionPoint:network:logicalName = "BMC_MGMT"
+        token simready:connectionPoint:type = "network"
+        token simready:connectionPoint:portType = "RJ45"
+        token simready:connectionPoint:network:medium = "copper"
+        token simready:connectionPoint:network:category = "management"
+        token simready:connectionPoint:network:fabricRole = "out_of_band"
+        token simready:connectionPoint:physicalLabel = "ETH1"
+        token simready:connectionPoint:network:logicalName = "BMC_MGMT"
     }
 }
 ```
@@ -751,9 +751,9 @@ physical rack may be cabled differently in different datacenters. Specifically:
 | Property | Source | Stability |
 |---|---|---|
 | Prim name | Hardware / CAD model | Stable across all installations of the same hardware |
-| `connectionPoint:physicalLabel` | Hardware silk-screen | Stable (matches prim name, human-readable) |
-| `connectionPoint:network:logicalName` | Network design tools | Varies per deployment |
-| `connectionPoint:network:switchPort` | Network design / SysML | Varies per deployment (site-specific layer) |
+| `simready:connectionPoint:physicalLabel` | Hardware silk-screen | Stable (matches prim name, human-readable) |
+| `simready:connectionPoint:network:logicalName` | Network design tools | Varies per deployment |
+| `simready:connectionPoint:network:switchPort` | Network design / SysML | Varies per deployment (site-specific layer) |
 
 This keeps the physical and logical worlds cleanly separated. Logical names are
 site-specific overrides in a stronger composition layer, consistent with the

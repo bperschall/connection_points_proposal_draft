@@ -1,6 +1,6 @@
 # Connection Points Vocabulary Specification v0.2.0
 
-Copyright &copy; 2026, NVIDIA Corporation, version 0.2.0 (DRAFT), May 11, 2026
+Copyright &copy; 2026, NVIDIA Corporation, version 0.2.0 (DRAFT), May 12, 2026
 
 Beau Perschall
 
@@ -127,13 +127,13 @@ engineering parameters, sublayer composition model -- do not assume datacenter
 equipment. Any physical asset with connection points that need to be described
 for simulation, planning, or integration purposes can use the same pattern.
 
-A robotic workcell could define `connectionPoint:pneumatic:` with properties
+A robotic workcell could define `simready:connectionPoint:pneumatic:` with properties
 for operating pressure, thread type, and flow capacity. A manufacturing
-facility's HVAC system could use `connectionPoint:thermal:` and
-`connectionPoint:airflow:` with the same property definitions used here. An EV
-charging station could extend `connectionPoint:electrical:` with DC fast-charge
+facility's HVAC system could use `simready:connectionPoint:thermal:` and
+`simready:connectionPoint:airflow:` with the same property definitions used here. An EV
+charging station could extend `simready:connectionPoint:electrical:` with DC fast-charge
 properties. Each new domain follows the same structural pattern: a namespace
-under `connectionPoint:` carrying physical geometry and operating parameter
+under `simready:connectionPoint:` carrying physical geometry and operating parameter
 properties.
 
 The base namespace properties (`domain`, `direction`, `system`,
@@ -155,11 +155,11 @@ For example, a connection point could initially carry only semantic identity
 as an authoring stub:
 
 ```
-connectionPoint:domain = "thermal"
-connectionPoint:direction = "supply"
-connectionPoint:system = "FWS"
-connectionPoint:disconnectType = "flanged"
-connectionPoint:serviceClearance = 0.3
+simready:connectionPoint:domain = "thermal"
+simready:connectionPoint:direction = "supply"
+simready:connectionPoint:system = "FWS"
+simready:connectionPoint:disconnectType = "flanged"
+simready:connectionPoint:serviceClearance = 0.3
 ```
 
 And be progressively enriched with thermal domain properties as the data
@@ -238,7 +238,7 @@ of the property namespace.
 
 The Xform's transform (position and rotation) describes where the connection
 is in 3D space and which way its physical opening faces. This is a spatial
-concern owned by the CAD tool. The vocabulary property `connectionPoint:direction`
+concern owned by the CAD tool. The vocabulary property `simready:connectionPoint:direction`
 is semantic: it describes the logical role of the connection within its system
 (supply vs return, input vs output). Two connections may have identical
 physical orientations (e.g., two pipes pointing out the back of a CDU) but
@@ -250,7 +250,7 @@ direction property tells it which way the system model flows.
 
 ## Base namespace: semantic identity
 
-The base `connectionPoint:` namespace carries only semantic identity -- the
+The base `simready:connectionPoint:` namespace carries only semantic identity -- the
 properties that answer "what IS this connection?" without describing its
 physical characteristics or operating parameters. These properties are
 universal across all domains and connection types.
@@ -265,20 +265,20 @@ a future concern to be addressed alongside schema promotion.
 
 | Property | Type | Example values | Description |
 |----------|------|---------------|-------------|
-| `connectionPoint:domain` | token | `thermal`, `electrical`, `network`, `airflow`, `mechanical`, `pneumatic` | The physical domain of this connection |
-| `connectionPoint:direction` | token | `supply`, `return`, `input`, `output`, `bidirectional` | Flow or signal direction |
-| `connectionPoint:system` | token | e.g. `FWS`, `TCS`, `power`, `BMS`, `high_speed_data`, `mgmt`, `equipment_cooling` | System classification within the facility |
-| `connectionPoint:disconnectType` | token | e.g. `flanged`, `quick_disconnect`, `hardwired`, `RJ45`, `OSFP`, `blind_mate`, `open_vent` | Physical disconnect mechanism |
-| `connectionPoint:serviceClearance` | float (meters) | positive float | Minimum unobstructed clearance envelope around this connection, measured as the shortest distance from the connection interface to any obstruction that would prevent service access |
+| `simready:connectionPoint:domain` | token | `thermal`, `electrical`, `network`, `airflow`, `mechanical`, `pneumatic` | The physical domain of this connection |
+| `simready:connectionPoint:direction` | token | `supply`, `return`, `input`, `output`, `bidirectional` | Flow or signal direction |
+| `simready:connectionPoint:system` | token | e.g. `FWS`, `TCS`, `power`, `BMS`, `high_speed_data`, `mgmt`, `equipment_cooling` | System classification within the facility |
+| `simready:connectionPoint:disconnectType` | token | e.g. `flanged`, `quick_disconnect`, `hardwired`, `RJ45`, `OSFP`, `blind_mate`, `open_vent` | Physical disconnect mechanism |
+| `simready:connectionPoint:serviceClearance` | float (meters) | positive float | Minimum unobstructed clearance envelope around this connection, measured as the shortest distance from the connection interface to any obstruction that would prevent service access |
 
-**Migration note (`connectionPoint:type` to `connectionPoint:domain`):**
+**Migration note (`simready:connectionPoint:type` to `simready:connectionPoint:domain`):**
 Earlier drafts of this specification and some pre-release exemplars used the
-property name `connectionPoint:type` for the domain identifier. That property
-has been renamed to `connectionPoint:domain` to align with the terminology
+property name `simready:connectionPoint:type` for the domain identifier. That property
+has been renamed to `simready:connectionPoint:domain` to align with the terminology
 used throughout the specification. Validators should treat
-`connectionPoint:type` as a deprecated alias: flag it as a warning and, where
-tooling supports it, automatically map it to `connectionPoint:domain`. Asset
-authors should update existing assets to use `connectionPoint:domain`; the old
+`simready:connectionPoint:type` as a deprecated alias: flag it as a warning and, where
+tooling supports it, automatically map it to `simready:connectionPoint:domain`. Asset
+authors should update existing assets to use `simready:connectionPoint:domain`; the old
 property name will not be supported in future schema promotions.
 
 **Open token validator behavior:** The open vocabulary principle means that
@@ -320,7 +320,7 @@ is an explicit statement; omission is ambiguous.
 Placing these in the base namespace would force a universal shape onto concepts
 that are fundamentally domain-specific, or require consumers to know which base
 properties apply to which domain. By keeping the base namespace clean, every
-property in `connectionPoint:` applies to every connection, no exceptions.
+property in `simready:connectionPoint:` applies to every connection, no exceptions.
 
 `serviceClearance` is the one property kept in the base namespace that could
 arguably be domain-specific. Every connection needs a maintenance access
@@ -338,34 +338,34 @@ Each domain namespace carries two kinds of properties:
 2. **Operating parameters** -- the engineering data a simulation tool needs to
    set up an analysis
 
-### Thermal domain (`connectionPoint:thermal:`)
+### Thermal domain (`simready:connectionPoint:thermal:`)
 
 For fluid connections (cooling loops, condensate, chilled water).
 
 > **Naming note (SG-E1):** In datacenter contexts, "thermal" refers specifically
 > to *liquid-cooled thermal* connections -- piped fluid loops carrying heat away
 > from equipment. Gas-phase thermal cooling (air moving over equipment) is covered
-> by the separate `connectionPoint:airflow:` domain. This naming reflects how
+> by the separate `simready:connectionPoint:airflow:` domain. This naming reflects how
 > datacenter engineering teams segment their work: liquid cooling teams own the
 > thermal domain, while airflow/CFD teams own the airflow domain. Adjacent
 > industries (manufacturing, robotics) with hydraulic or chemical fluid connections
-> would follow the same structural pattern using the `connectionPoint:thermal:`
+> would follow the same structural pattern using the `simready:connectionPoint:thermal:`
 > namespace for fluid-based connections, or introduce new domain namespaces
-> (e.g. `connectionPoint:hydraulic:`) if the property set diverges significantly.
+> (e.g. `simready:connectionPoint:hydraulic:`) if the property set diverges significantly.
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `connectionPoint:thermal:portDiameter` | float (meters) | Internal pipe diameter |
-| `connectionPoint:thermal:matingDepth` | float (meters) | Flange engagement or coupling insertion depth |
-| `connectionPoint:thermal:designFlowRate` | float (L/s) | Nominal operating flow rate |
-| `connectionPoint:thermal:maxFlowRate` | float (L/s) | Rated maximum flow rate |
-| `connectionPoint:thermal:designTemperature` | float (Celsius) | Nominal operating temperature at this connection |
-| `connectionPoint:thermal:maxTemperature` | float (Celsius) | Rated temperature limit |
-| `connectionPoint:thermal:operatingPressure` | float (Pa) | Nominal operating pressure |
-| `connectionPoint:thermal:maxPressure` | float (Pa) | Rated pressure limit |
-| `connectionPoint:thermal:fluidType` | token | Working fluid in the loop. Use descriptive tokens that encode concentration where relevant (e.g. `water`, `glycol_water_30`, `glycol_water_50`, `refrigerant_R410A`, `refrigerant_R134a`). See "Fluid type tokens" below. |
-| `connectionPoint:thermal:flangeRating` | token | Flange standard designation (e.g. `ANSI_150`) |
-| `connectionPoint:thermal:flangeSize` | token | Nominal pipe size designation (e.g. `NPS4`) |
+| `simready:connectionPoint:thermal:portDiameter` | float (meters) | Internal pipe diameter |
+| `simready:connectionPoint:thermal:matingDepth` | float (meters) | Flange engagement or coupling insertion depth |
+| `simready:connectionPoint:thermal:designFlowRate` | float (L/s) | Nominal operating flow rate |
+| `simready:connectionPoint:thermal:maxFlowRate` | float (L/s) | Rated maximum flow rate |
+| `simready:connectionPoint:thermal:designTemperature` | float (Celsius) | Nominal operating temperature at this connection |
+| `simready:connectionPoint:thermal:maxTemperature` | float (Celsius) | Rated temperature limit |
+| `simready:connectionPoint:thermal:operatingPressure` | float (Pa) | Nominal operating pressure |
+| `simready:connectionPoint:thermal:maxPressure` | float (Pa) | Rated pressure limit |
+| `simready:connectionPoint:thermal:fluidType` | token | Working fluid in the loop. Use descriptive tokens that encode concentration where relevant (e.g. `water`, `glycol_water_30`, `glycol_water_50`, `refrigerant_R410A`, `refrigerant_R134a`). See "Fluid type tokens" below. |
+| `simready:connectionPoint:thermal:flangeRating` | token | Flange standard designation (e.g. `ANSI_150`) |
+| `simready:connectionPoint:thermal:flangeSize` | token | Nominal pipe size designation (e.g. `NPS4`) |
 
 **Fluid type tokens:** The `fluidType` property uses a single descriptive token
 rather than separate fluid-type and concentration properties. This simplification
@@ -388,21 +388,21 @@ pattern `{fluid_category}_{specifier}`. Validators should accept unknown tokens
 with a warning rather than rejecting them, to allow for emerging fluid types
 without requiring vocabulary revisions.
 
-### Electrical domain (`connectionPoint:electrical:`)
+### Electrical domain (`simready:connectionPoint:electrical:`)
 
 For power connections (mains feeds, PDU outputs, UPS bypass).
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `connectionPoint:electrical:matingDepth` | float (meters) | Plug insertion depth; set to 0.0 for hardwired connections |
-| `connectionPoint:electrical:nominalVoltage` | float (V) | Site-specific nominal voltage |
-| `connectionPoint:electrical:maxCurrent` | float (A) | Rated maximum current draw |
-| `connectionPoint:electrical:phases` | int | Number of phases (typically 3 for datacenter equipment) |
-| `connectionPoint:electrical:frequency` | float (Hz) | Line frequency (50 or 60 Hz, site-specific) |
-| `connectionPoint:electrical:connectorType` | token | Physical connection method (e.g. `hardwired`, `IEC_60309`, `NEMA_L21_30`) |
-| `connectionPoint:electrical:ratedPower` | float (W) | Rated power capacity of this connection (e.g. UPS output feed capacity) |
-| `connectionPoint:electrical:breakerRating` | float (A) | Upstream breaker protection rating |
-| `connectionPoint:electrical:powerFactor` | float (0-1) | Manufacturer-specified power factor |
+| `simready:connectionPoint:electrical:matingDepth` | float (meters) | Plug insertion depth; set to 0.0 for hardwired connections |
+| `simready:connectionPoint:electrical:nominalVoltage` | float (V) | Site-specific nominal voltage |
+| `simready:connectionPoint:electrical:maxCurrent` | float (A) | Rated maximum current draw |
+| `simready:connectionPoint:electrical:phases` | int | Number of phases (typically 3 for datacenter equipment) |
+| `simready:connectionPoint:electrical:frequency` | float (Hz) | Line frequency (50 or 60 Hz, site-specific) |
+| `simready:connectionPoint:electrical:connectorType` | token | Physical connection method (e.g. `hardwired`, `IEC_60309`, `NEMA_L21_30`) |
+| `simready:connectionPoint:electrical:ratedPower` | float (W) | Rated power capacity of this connection (e.g. UPS output feed capacity) |
+| `simready:connectionPoint:electrical:breakerRating` | float (A) | Upstream breaker protection rating |
+| `simready:connectionPoint:electrical:powerFactor` | float (0-1) | Manufacturer-specified power factor |
 
 **Regional variation:** Electrical properties are site-specific, not
 equipment-inherent. The same equipment deployed in different regions will have
@@ -414,26 +414,26 @@ asset composition are out of scope for v0.2.0; the vocabulary defines the
 properties, and the composition approach will be addressed in a future
 revision when real multi-region assets are in hand.
 
-### Network domain (`connectionPoint:network:`)
+### Network domain (`simready:connectionPoint:network:`)
 
 For data and control connections (high-speed compute fabric, management, BMS).
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `connectionPoint:network:portWidth` | float (meters) | Connector opening width |
-| `connectionPoint:network:portHeight` | float (meters) | Connector opening height |
-| `connectionPoint:network:matingDepth` | float (meters) | Plug insertion depth |
-| `connectionPoint:network:portType` | token | Physical connector type (e.g. `RJ45`, `SFP_plus`, `QSFP28`, `QSFP_DD`, `OSFP`) |
-| `connectionPoint:network:protocol` | token | Communication protocol (e.g. `BACnet_IP`, `Modbus_TCP`, `SNMP`, `Ethernet`) |
-| `connectionPoint:network:dataRate` | token | Maximum data rate (e.g. `100Mbps`, `25GbE`, `100GbE`, `400GbE`, `800GbE`) |
-| `connectionPoint:network:medium` | token | Physical medium (e.g. `copper`, `fiber`, `DAC`) |
-| `connectionPoint:network:fabricRole` | token | Role in the network fabric (e.g. `compute`, `storage`, `mgmt`, `bms`) |
-| `connectionPoint:network:supportedLineRates` | token[] | Supported line rate configurations |
-| `connectionPoint:network:supportedConfigurations` | token[] | Breakout configurations (e.g. `1x800G`, `2x400G`, `4x200G`) |
-| `connectionPoint:network:allowedTransceivers` | token[] | Compatible transceiver types (e.g. `DR4`, `FR4`, `LR4`) |
-| `connectionPoint:network:hotPlugCapable` | bool | Whether the port supports hot-plug |
+| `simready:connectionPoint:network:portWidth` | float (meters) | Connector opening width |
+| `simready:connectionPoint:network:portHeight` | float (meters) | Connector opening height |
+| `simready:connectionPoint:network:matingDepth` | float (meters) | Plug insertion depth |
+| `simready:connectionPoint:network:portType` | token | Physical connector type (e.g. `RJ45`, `SFP_plus`, `QSFP28`, `QSFP_DD`, `OSFP`) |
+| `simready:connectionPoint:network:protocol` | token | Communication protocol (e.g. `BACnet_IP`, `Modbus_TCP`, `SNMP`, `Ethernet`) |
+| `simready:connectionPoint:network:dataRate` | token | Maximum data rate (e.g. `100Mbps`, `25GbE`, `100GbE`, `400GbE`, `800GbE`) |
+| `simready:connectionPoint:network:medium` | token | Physical medium (e.g. `copper`, `fiber`, `DAC`) |
+| `simready:connectionPoint:network:fabricRole` | token | Role in the network fabric (e.g. `compute`, `storage`, `mgmt`, `bms`) |
+| `simready:connectionPoint:network:supportedLineRates` | token[] | Supported line rate configurations |
+| `simready:connectionPoint:network:supportedConfigurations` | token[] | Breakout configurations (e.g. `1x800G`, `2x400G`, `4x200G`) |
+| `simready:connectionPoint:network:allowedTransceivers` | token[] | Compatible transceiver types (e.g. `DR4`, `FR4`, `LR4`) |
+| `simready:connectionPoint:network:hotPlugCapable` | bool | Whether the port supports hot-plug |
 
-### Airflow domain (`connectionPoint:airflow:`)
+### Airflow domain (`simready:connectionPoint:airflow:`)
 
 For air intake and exhaust connections (equipment ventilation, hot/cold aisle
 faces, CRAH/CRAC supply and return). Most datacenter equipment rejects some
@@ -442,13 +442,13 @@ the data hall needs to know where air enters and exits each piece of equipment,
 at what volume and temperature.
 
 > **Naming note (SG-E1):** Airflow is technically a form of thermal cooling
-> (gas-phase heat transfer). The separate `connectionPoint:airflow:` domain exists
+> (gas-phase heat transfer). The separate `simready:connectionPoint:airflow:` domain exists
 > because the property set, tooling, and engineering workflows for air-side
 > connections differ substantially from piped fluid connections. In datacenter
 > contexts, "airflow" means whitespace gas-phase cooling (air), while "thermal"
 > means piped liquid cooling. For adjacent use cases involving pressurized gas
 > (e.g. pneumatic actuators in robotic workcells), a separate
-> `connectionPoint:pneumatic:` domain is anticipated -- see the "Additional
+> `simready:connectionPoint:pneumatic:` domain is anticipated -- see the "Additional
 > domains" section under Future Considerations.
 
 **Airflow interface concept:** An airflow connection point represents a
@@ -471,15 +471,15 @@ expectations of CFD tools that consume interface geometry.
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `connectionPoint:airflow:interfaceWidth` | float (meters) | Width of the contiguous airflow interface region |
-| `connectionPoint:airflow:interfaceHeight` | float (meters) | Height of the contiguous airflow interface region |
-| `connectionPoint:airflow:freeAreaRatio` | float (0-1) | Fraction of the interface area open to airflow (e.g. 0.7 for a 70% perforated panel) |
-| `connectionPoint:airflow:designAirflowRate` | float (m^3/s) | Nominal airflow volume rate through this interface |
-| `connectionPoint:airflow:maxAirflowRate` | float (m^3/s) | Rated maximum airflow volume rate |
-| `connectionPoint:airflow:designTemperature` | float (Celsius) | Expected air temperature at this interface under nominal conditions |
-| `connectionPoint:airflow:maxTemperature` | float (Celsius) | Rated air temperature limit |
-| `connectionPoint:airflow:staticPressure` | float (Pa) | Pressure differential across the interface or filter |
-| `connectionPoint:airflow:filterType` | token | Filter specification if present (e.g. `MERV_8`, `none`) |
+| `simready:connectionPoint:airflow:interfaceWidth` | float (meters) | Width of the contiguous airflow interface region |
+| `simready:connectionPoint:airflow:interfaceHeight` | float (meters) | Height of the contiguous airflow interface region |
+| `simready:connectionPoint:airflow:freeAreaRatio` | float (0-1) | Fraction of the interface area open to airflow (e.g. 0.7 for a 70% perforated panel) |
+| `simready:connectionPoint:airflow:designAirflowRate` | float (m^3/s) | Nominal airflow volume rate through this interface |
+| `simready:connectionPoint:airflow:maxAirflowRate` | float (m^3/s) | Rated maximum airflow volume rate |
+| `simready:connectionPoint:airflow:designTemperature` | float (Celsius) | Expected air temperature at this interface under nominal conditions |
+| `simready:connectionPoint:airflow:maxTemperature` | float (Celsius) | Rated air temperature limit |
+| `simready:connectionPoint:airflow:staticPressure` | float (Pa) | Pressure differential across the interface or filter |
+| `simready:connectionPoint:airflow:filterType` | token | Filter specification if present (e.g. `MERV_8`, `none`) |
 
 The airflow domain is exercised lightly on the CDU (internal electronics
 cooling) and compute rack (residual air heat rejection) exemplars. It will
@@ -499,7 +499,7 @@ their input is expected.
 | PLM system (Windchill, Teamcenter) | Engineering parameters from product data, BOM structure, reference designators | `thermal:designFlowRate`, `electrical:nominalVoltage`, instance identity via refdes |
 | Equipment datasheets | Manufacturer-rated limits and specifications | `thermal:maxPressure`, `electrical:maxCurrent`, `electrical:powerFactor` |
 | Site configuration / SME input | Installation-specific values that vary by deployment | `electrical:frequency`, `thermal:fluidType`, `electrical:breakerRating` |
-| Engineering / asset author | Semantic identity set once during asset authoring | `connectionPoint:domain`, `connectionPoint:direction`, `connectionPoint:system` |
+| Engineering / asset author | Semantic identity set once during asset authoring | `simready:connectionPoint:domain`, `simready:connectionPoint:direction`, `simready:connectionPoint:system` |
 
 **Tooling gap:** The provenance table above describes where data *should*
 originate. Current CAD export and PLM integration pipelines do not produce
@@ -530,8 +530,8 @@ Descriptive prim names (e.g., `fws_supply_main`, `osfp_port_01`) are
 encouraged for human readability when browsing in usdview or reviewing
 composition arcs. However, with the vocabulary properties carrying all
 semantic identity, prim names are not load-bearing for tool queries and are
-not validated. Tools should query `connectionPoint:system` and
-`connectionPoint:direction` rather than parsing prim names. No naming
+not validated. Tools should query `simready:connectionPoint:system` and
+`simready:connectionPoint:direction` rather than parsing prim names. No naming
 convention is enforced by the vocabulary or its validators.
 
 ---
@@ -543,10 +543,10 @@ other well:
 
 | Today (v0.1.0) | With vocabulary (v0.2.0) |
 |----------------|------------------------|
-| `aif:spec:fwsSupplyPipingConnection` on equipment prim | `connectionPoint:thermal:portDiameter` + `connectionPoint:thermal:flangeRating` on the connection Xform |
-| `aif:spec:nominalFlow` (one number for the whole unit) | `connectionPoint:thermal:designFlowRate` on each connection (per-port values) |
-| `aif:spec:nominalVoltage` (one number for the whole unit) | `connectionPoint:electrical:nominalVoltage` on each power connection |
-| Parse `fws_supply` from prim name | Query `connectionPoint:system == "FWS"` + `connectionPoint:direction == "supply"` |
+| `aif:spec:fwsSupplyPipingConnection` on equipment prim | `simready:connectionPoint:thermal:portDiameter` + `simready:connectionPoint:thermal:flangeRating` on the connection Xform |
+| `aif:spec:nominalFlow` (one number for the whole unit) | `simready:connectionPoint:thermal:designFlowRate` on each connection (per-port values) |
+| `aif:spec:nominalVoltage` (one number for the whole unit) | `simready:connectionPoint:electrical:nominalVoltage` on each power connection |
+| Parse `fws_supply` from prim name | Query `simready:connectionPoint:system == "FWS"` + `simready:connectionPoint:direction == "supply"` |
 
 Both formats coexist indefinitely. Assets can be migrated incrementally, and
 tools that only understand v0.1.0 properties continue to work. There is no
@@ -580,7 +580,7 @@ domain works in Celsius. The conversion to Kelvin (K = C + 273.15) is trivial
 if needed downstream. Temperature properties (`designTemperature`,
 `maxTemperature`) represent the fluid or air temperature measured at the
 connection interface. Whether that interface is an inlet or outlet is
-determined by `connectionPoint:direction` and the system convention (e.g.,
+determined by `simready:connectionPoint:direction` and the system convention (e.g.,
 a thermal supply connection carries the temperature of coolant leaving the
 source toward consumers; an airflow input carries the temperature of air
 entering the equipment).
@@ -604,7 +604,7 @@ with CFD tool conventions.
 
 ### Semantic clarifications
 
-**`connectionPoint:direction` by domain:** The `direction` property uses
+**`simready:connectionPoint:direction` by domain:** The `direction` property uses
 domain-appropriate terminology. Thermal connections use `supply` (fluid
 flowing toward consumers) and `return` (fluid flowing back to the source).
 Electrical connections use `input` (power entering the equipment) and `output`
@@ -613,13 +613,13 @@ and `output` (air exiting). Network connections use `bidirectional` for full-
 duplex data ports. These are the expected values per domain, not enforced
 constraints; the vocabulary's open token principle applies.
 
-**`connectionPoint:system` naming conventions:** Facility-level system
+**`simready:connectionPoint:system` naming conventions:** Facility-level system
 acronyms use uppercase (e.g., `FWS`, `TCS`, `BMS`) to match industry standard
 abbreviations. Functional roles use lowercase (e.g., `power`, `mgmt`,
 `high_speed_data`, `equipment_cooling`). This convention improves readability
 and aligns with how these systems are referenced in facility documentation.
 
-**`connectionPoint:disconnectType` vs domain `connectorType`/`portType`:**
+**`simready:connectionPoint:disconnectType` vs domain `connectorType`/`portType`:**
 The base namespace `disconnectType` describes the service and disconnection
 behavior of the connection -- how a technician physically disconnects it for
 maintenance (e.g., unbolts a flange, pulls a quick-disconnect, unplugs an
@@ -644,7 +644,7 @@ the Units section above.
 ### Redundant power feeds: deferred
 
 Single-feed only for the initial vocabulary. The property name
-`connectionPoint:redundancyGroup` is reserved for when redundancy modeling is
+`simready:connectionPoint:redundancyGroup` is reserved for when redundancy modeling is
 addressed (likely with the UPS equipment class).
 
 ### Base namespace scope: semantic identity only
@@ -653,39 +653,44 @@ Physical connection geometry lives in domain namespaces. The base namespace
 contains only properties that apply universally to every connection regardless
 of domain. See the rationale in the "Base namespace" section above.
 
-### Namespace prefix: `simready:connectionPoint:` vs. flat `connectionPoint:` (SG-E5)
+### Namespace prefix: `simready:connectionPoint:` (SG-E5) -- RESOLVED
 
 Steve Ghee (PTC) raised whether the connection point namespace should live
 under a `simready:` parent prefix (e.g. `simready:connectionPoint:airflow:`
-instead of `connectionPoint:airflow:`). This question is **deferred** and
-coupled to the venue decision: whether the Connection Points vocabulary
-ultimately lives in SimReady Foundation (SRF), is proposed to AOUSD as a
-neutral standard, or is published as an independent schema.
+instead of a flat `connectionPoint:airflow:`). This question has been
+**resolved** -- all connection point properties now use the `simready:`
+prefix.
 
-Arguments for a `simready:` prefix: eliminates namespace collision risk if
-other USD ecosystems independently define `connectionPoint:` properties;
-aligns with SRF packaging conventions.
+**Rationale:** The `simready:` prefix aligns with the SRF naming-conventions
+guide (Jason Batchkoff, Aaron Luk) and eliminates namespace collision risk if
+other USD ecosystems independently define `connectionPoint:` properties. The
+prefix is compatible with all three implementation approaches:
 
-Arguments against: the current flat namespace is the most portable option
-and is compatible with all three implementation approaches in the spec
-(namespaced attributes, applied API schema, and SemanticsLabelsAPI). Adding
-a vendor prefix now would create migration pain if CP is later standardized
-at a higher level, and would conflict with the SemanticsLabelsAPI approach
-(Approach 3) which uses core USD semantics without vendor prefixes.
+- **Approach 2 (namespaced attributes):** Properties are prefixed directly
+  (e.g. `simready:connectionPoint:thermal:designFlowRate`).
+- **Approach 3 (SemanticsLabelsAPI):** Discovery tokens coexist on the same
+  prim (e.g. `token[] semantics:labels:simready = ["connectionPoint", "thermal"]`).
+  The semantic labels use the core USD semantics namespace and do not conflict
+  with the `simready:` property prefix.
 
-**Decision:** Deferred until the venue question is resolved. The flat
-`connectionPoint:` namespace remains the current position.
+The `simready:` prefix and SemanticsLabelsAPI labels are complementary -- one
+provides typed property access, the other provides discovery and classification.
+Both live on the same prim without conflict (confirmed via Aaron Luk's CDU
+example file, May 2026).
+
+**Decision:** Adopted. All `connectionPoint:` properties in this specification
+and its exemplars now carry the `simready:` prefix.
 
 ### Reserved property names
 
 The following property names are reserved for future vocabulary revisions.
 They must not be used for other purposes by asset authors or tooling.
 
-- `connectionPoint:redundancyGroup` -- Group identifier linking connections
+- `simready:connectionPoint:redundancyGroup` -- Group identifier linking connections
   that participate in a shared redundancy scheme (e.g., A/B power feeds,
   N+1 UPS configurations). Deferred until the redundancy modeling use case
   is formalized.
-- `connectionPoint:pairWith` -- Reserved to prevent accidental use of this
+- `simready:connectionPoint:pairWith` -- Reserved to prevent accidental use of this
   name by asset authors. Cross-equipment connection relationships (e.g., a
   CDU TCS supply paired with a rack TCS supply) may ultimately live in a
   separate logical schematic layer rather than as individual connection
@@ -703,7 +708,7 @@ am I?" problem without requiring the vocabulary to solve it. PTC's RJ45 PoC
 (Steve Ghee, May 2026) has demonstrated that Windchill's reference designator
 (refdes) system maps to USD's `SemanticsLabelsAPI`, providing inherited
 instance identity through arbitrary nesting depth. A single RJ45 connection
-point definition (with `connectionPoint:network:` properties) gets instanced
+point definition (with `simready:connectionPoint:network:` properties) gets instanced
 across trays and racks, and each instance inherits a unique identifier chain
 from the composition hierarchy (e.g., `["n1", "t3"]` for connector n1 on
 tray t3).
@@ -727,7 +732,7 @@ v2.0 is prior art in this space. SSP's System Structure Description (SSD)
 declares components, their connectors, and connections between them,
 independent of any simulation tool or 3D geometry. Dassault has multiple
 contributors on the SSP spec, and a future mapping between the
-`connectionPoint:` vocabulary and SSP connectors could enable round-tripping
+`simready:connectionPoint:` vocabulary and SSP connectors could enable round-tripping
 between the 3D digital twin (USD) and the simulation system model (SSP).
 
 The vocabulary defined here is designed to be compatible with that future
@@ -737,7 +742,7 @@ properties provide the parameters it would reason over.
 
 ### Schema promotion
 
-The current approach uses namespaced properties (`connectionPoint:` prefix)
+The current approach uses namespaced properties (`simready:connectionPoint:` prefix)
 without a formal USD applied API schema. If adoption warrants it, these
 properties can be promoted to an applied API schema with no change to property
 names -- existing assets remain valid. This is a deliberate maturity ramp: prove
@@ -752,7 +757,7 @@ domains. Future equipment classes may introduce additional domains:
 - **Mechanical** -- structural mounts, tool changers, bolt patterns
 
 Each new domain follows the same pattern: domain-specific namespace under
-`connectionPoint:` with physical geometry and operating parameter properties.
+`simready:connectionPoint:` with physical geometry and operating parameter properties.
 
 ### Additional equipment classes
 
@@ -776,7 +781,7 @@ specification, follow these rules strictly.
 1. **One prim per connection, one domain per prim.** Each physical connection
    point is a single Xform prim with properties from exactly one domain
    namespace (thermal, electrical, network, or airflow) plus the base
-   `connectionPoint:` namespace.
+   `simready:connectionPoint:` namespace.
 
 2. **Base namespace is always required.** Every connection point must include
    all five base properties: `domain`, `direction`, `system`, `disconnectType`,
@@ -793,8 +798,8 @@ specification, follow these rules strictly.
    three validation levels (stub, draft, production).
 
 4. **Only include properties from the connection's own domain.** A thermal
-   connection carries `connectionPoint:thermal:` properties. Do NOT add
-   `connectionPoint:electrical:` or `connectionPoint:network:` properties
+   connection carries `simready:connectionPoint:thermal:` properties. Do NOT add
+   `simready:connectionPoint:electrical:` or `simready:connectionPoint:network:` properties
    to it. Each connection has exactly one domain.
 
 5. **Token values are open, not closed.** The example values listed in
@@ -817,7 +822,7 @@ specification, follow these rules strictly.
 
 8. **Prim names are not load-bearing.** Prim names (e.g.,
    `fws_supply_main`, `osfp_port_01`) are a readability convention. Tools
-   must query `connectionPoint:system` and `connectionPoint:direction`
+   must query `simready:connectionPoint:system` and `simready:connectionPoint:direction`
    properties, not parse prim names. Authors SHOULD set the USD `displayName`
    metadata on connection point prims to provide human-readable labels
    (e.g., `displayName = "Facility Water Supply -- Primary"`). This leverages
@@ -856,7 +861,7 @@ specification, follow these rules strictly.
 
 - **Treating prim names as semantic.** Do not extract system or direction
   information from the prim name. A prim named `port_01` with
-  `connectionPoint:system = "FWS"` and `connectionPoint:direction = "supply"`
+  `simready:connectionPoint:system = "FWS"` and `simready:connectionPoint:direction = "supply"`
   is a valid FWS supply connection. The name carries no semantic weight.
 
 - **Limiting token values to listed examples.** If your equipment has a
@@ -875,5 +880,5 @@ specification, follow these rules strictly.
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 0.2.0 | May 11, 2026 | **SG-E1:** Added naming convention notes to thermal and airflow domain headers clarifying datacenter-specific naming (thermal = liquid-cooled, airflow = gas-phase). **SG-E3:** Added explicit center-anchor specification for airflow interface rectangles. **SG-E4:** Added `displayName` metadata recommendation for human-readable connection point labels. **SG-E5:** Added namespace prefix (`simready:` vs. flat `connectionPoint:`) as open position, deferred to venue decision. Feedback source: Steve Ghee (PTC), May 8 email. |
+| 0.2.0 | May 12, 2026 | **SG-E1:** Added naming convention notes to thermal and airflow domain headers clarifying datacenter-specific naming (thermal = liquid-cooled, airflow = gas-phase). **SG-E3:** Added explicit center-anchor specification for airflow interface rectangles. **SG-E4:** Added `displayName` metadata recommendation for human-readable connection point labels. **SG-E5:** Adopted `simready:` namespace prefix for all `connectionPoint:` properties, per SRF naming-conventions guide (Aaron Luk, Jason Batchkoff). Confirmed Approach 2 + Approach 3 coexistence. Feedback source: Steve Ghee (PTC), May 8 email; Aaron Luk decision, May 12 email. |
 | 0.1.0 | May 8, 2026 | Initial v0.2.0 draft incorporating Steve Ghee branch feedback (SemanticsLabelsAPI as Approach 3, environmental interface acknowledgment, industrial/datacenter framing, PLM optionality, mating depth naming note, robotic/manufacturing merge, network logical/physical note), Steve Blackwell/Vertiv working session feedback (fluid type simplification, use-case-first design mandate), and Asmita venue meeting outcome (SRF for now). |

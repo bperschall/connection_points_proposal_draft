@@ -69,11 +69,11 @@ connection-point properties. The vocabulary draws this line clearly:
 
 | Equipment-level (stays on equipment prim) | Connection-level (on the Xform) |
 |------------------------------------------|--------------------------------|
-| `aif:spec:upsRating` (overall kW rating) | `connectionPoint:electrical:ratedPower` (per-feed capacity) |
-| `aif:spec:inputCurrentDistortion` (THDi) | `connectionPoint:electrical:nominalVoltage` (per-connection) |
-| `aif:spec:batteryType` (VRLA, Li-ion) | `connectionPoint:electrical:maxCurrent` (per-connection) |
-| `aif:spec:transientRecoveryLoad` (transfer behavior) | `connectionPoint:electrical:connectorType` (per-connection) |
-| `aif:spec:overloadAtNominalVoltage` (overload tolerance) | `connectionPoint:electrical:breakerRating` (per-connection) |
+| `aif:spec:upsRating` (overall kW rating) | `simready:connectionPoint:electrical:ratedPower` (per-feed capacity) |
+| `aif:spec:inputCurrentDistortion` (THDi) | `simready:connectionPoint:electrical:nominalVoltage` (per-connection) |
+| `aif:spec:batteryType` (VRLA, Li-ion) | `simready:connectionPoint:electrical:maxCurrent` (per-connection) |
+| `aif:spec:transientRecoveryLoad` (transfer behavior) | `simready:connectionPoint:electrical:connectorType` (per-connection) |
+| `aif:spec:overloadAtNominalVoltage` (overload tolerance) | `simready:connectionPoint:electrical:breakerRating` (per-connection) |
 
 The vocabulary captures what a simulation tool needs to know about each
 physical connection point. Equipment behavior characteristics (THD, transient
@@ -96,24 +96,24 @@ def Xform "utility_input_main" (
 )
 {
     # Semantic identity (base namespace)
-    token connectionPoint:domain = "electrical"
-    token connectionPoint:direction = "input"
-    token connectionPoint:system = "power"
-    token connectionPoint:disconnectType = "hardwired"
-    float connectionPoint:serviceClearance = 0.6
+    token simready:connectionPoint:domain = "electrical"
+    token simready:connectionPoint:direction = "input"
+    token simready:connectionPoint:system = "power"
+    token simready:connectionPoint:disconnectType = "hardwired"
+    float simready:connectionPoint:serviceClearance = 0.6
 
     # Physical connection geometry (electrical domain)
-    float connectionPoint:electrical:matingDepth = 0.0
+    float simready:connectionPoint:electrical:matingDepth = 0.0
 
     # Operating parameters (electrical domain)
-    float connectionPoint:electrical:nominalVoltage = 480.0
-    float connectionPoint:electrical:maxCurrent = 350.0
-    int connectionPoint:electrical:phases = 3
-    float connectionPoint:electrical:frequency = 60.0
-    token connectionPoint:electrical:connectorType = "hardwired"
-    float connectionPoint:electrical:ratedPower = 250000.0
-    float connectionPoint:electrical:breakerRating = 400.0
-    float connectionPoint:electrical:powerFactor = 0.99
+    float simready:connectionPoint:electrical:nominalVoltage = 480.0
+    float simready:connectionPoint:electrical:maxCurrent = 350.0
+    int simready:connectionPoint:electrical:phases = 3
+    float simready:connectionPoint:electrical:frequency = 60.0
+    token simready:connectionPoint:electrical:connectorType = "hardwired"
+    float simready:connectionPoint:electrical:ratedPower = 250000.0
+    float simready:connectionPoint:electrical:breakerRating = 400.0
+    float simready:connectionPoint:electrical:powerFactor = 0.99
 }
 ```
 
@@ -131,24 +131,24 @@ def Xform "bypass_input" (
 )
 {
     # Semantic identity (base namespace)
-    token connectionPoint:domain = "electrical"
-    token connectionPoint:direction = "input"
-    token connectionPoint:system = "power"
-    token connectionPoint:disconnectType = "hardwired"
-    float connectionPoint:serviceClearance = 0.6
+    token simready:connectionPoint:domain = "electrical"
+    token simready:connectionPoint:direction = "input"
+    token simready:connectionPoint:system = "power"
+    token simready:connectionPoint:disconnectType = "hardwired"
+    float simready:connectionPoint:serviceClearance = 0.6
 
     # Physical connection geometry (electrical domain)
-    float connectionPoint:electrical:matingDepth = 0.0
+    float simready:connectionPoint:electrical:matingDepth = 0.0
 
     # Operating parameters (electrical domain)
-    float connectionPoint:electrical:nominalVoltage = 480.0
-    float connectionPoint:electrical:maxCurrent = 350.0
-    int connectionPoint:electrical:phases = 3
-    float connectionPoint:electrical:frequency = 60.0
-    token connectionPoint:electrical:connectorType = "hardwired"
-    float connectionPoint:electrical:ratedPower = 250000.0
-    float connectionPoint:electrical:breakerRating = 400.0
-    float connectionPoint:electrical:powerFactor = 0.99
+    float simready:connectionPoint:electrical:nominalVoltage = 480.0
+    float simready:connectionPoint:electrical:maxCurrent = 350.0
+    int simready:connectionPoint:electrical:phases = 3
+    float simready:connectionPoint:electrical:frequency = 60.0
+    token simready:connectionPoint:electrical:connectorType = "hardwired"
+    float simready:connectionPoint:electrical:ratedPower = 250000.0
+    float simready:connectionPoint:electrical:breakerRating = 400.0
+    float simready:connectionPoint:electrical:powerFactor = 0.99
 }
 ```
 
@@ -166,24 +166,24 @@ def Xform "output_feed_1" (
 )
 {
     # Semantic identity (base namespace)
-    token connectionPoint:domain = "electrical"
-    token connectionPoint:direction = "output"
-    token connectionPoint:system = "power"
-    token connectionPoint:disconnectType = "hardwired"
-    float connectionPoint:serviceClearance = 0.6
+    token simready:connectionPoint:domain = "electrical"
+    token simready:connectionPoint:direction = "output"
+    token simready:connectionPoint:system = "power"
+    token simready:connectionPoint:disconnectType = "hardwired"
+    float simready:connectionPoint:serviceClearance = 0.6
 
     # Physical connection geometry (electrical domain)
-    float connectionPoint:electrical:matingDepth = 0.0
+    float simready:connectionPoint:electrical:matingDepth = 0.0
 
     # Operating parameters (electrical domain)
-    float connectionPoint:electrical:nominalVoltage = 480.0
-    float connectionPoint:electrical:maxCurrent = 175.0
-    int connectionPoint:electrical:phases = 3
-    float connectionPoint:electrical:frequency = 60.0
-    token connectionPoint:electrical:connectorType = "hardwired"
-    float connectionPoint:electrical:ratedPower = 125000.0
-    float connectionPoint:electrical:breakerRating = 200.0
-    float connectionPoint:electrical:powerFactor = 1.0
+    float simready:connectionPoint:electrical:nominalVoltage = 480.0
+    float simready:connectionPoint:electrical:maxCurrent = 175.0
+    int simready:connectionPoint:electrical:phases = 3
+    float simready:connectionPoint:electrical:frequency = 60.0
+    token simready:connectionPoint:electrical:connectorType = "hardwired"
+    float simready:connectionPoint:electrical:ratedPower = 125000.0
+    float simready:connectionPoint:electrical:breakerRating = 200.0
+    float simready:connectionPoint:electrical:powerFactor = 1.0
 }
 ```
 
@@ -193,7 +193,7 @@ Second output feed. Identical electrical characteristics to Feed 1. Together,
 the two output feeds represent the UPS's full 250 kW output capacity split
 across two distribution paths. The relationship between these feeds (whether
 they are independent, load-sharing, or redundant) is not expressed in the
-vocabulary today -- that is deferred to the `connectionPoint:redundancyGroup`
+vocabulary today -- that is deferred to the `simready:connectionPoint:redundancyGroup`
 property pattern reserved in the parent specification.
 
 ```usda
@@ -202,24 +202,24 @@ def Xform "output_feed_2" (
 )
 {
     # Semantic identity (base namespace)
-    token connectionPoint:domain = "electrical"
-    token connectionPoint:direction = "output"
-    token connectionPoint:system = "power"
-    token connectionPoint:disconnectType = "hardwired"
-    float connectionPoint:serviceClearance = 0.6
+    token simready:connectionPoint:domain = "electrical"
+    token simready:connectionPoint:direction = "output"
+    token simready:connectionPoint:system = "power"
+    token simready:connectionPoint:disconnectType = "hardwired"
+    float simready:connectionPoint:serviceClearance = 0.6
 
     # Physical connection geometry (electrical domain)
-    float connectionPoint:electrical:matingDepth = 0.0
+    float simready:connectionPoint:electrical:matingDepth = 0.0
 
     # Operating parameters (electrical domain)
-    float connectionPoint:electrical:nominalVoltage = 480.0
-    float connectionPoint:electrical:maxCurrent = 175.0
-    int connectionPoint:electrical:phases = 3
-    float connectionPoint:electrical:frequency = 60.0
-    token connectionPoint:electrical:connectorType = "hardwired"
-    float connectionPoint:electrical:ratedPower = 125000.0
-    float connectionPoint:electrical:breakerRating = 200.0
-    float connectionPoint:electrical:powerFactor = 1.0
+    float simready:connectionPoint:electrical:nominalVoltage = 480.0
+    float simready:connectionPoint:electrical:maxCurrent = 175.0
+    int simready:connectionPoint:electrical:phases = 3
+    float simready:connectionPoint:electrical:frequency = 60.0
+    token simready:connectionPoint:electrical:connectorType = "hardwired"
+    float simready:connectionPoint:electrical:ratedPower = 125000.0
+    float simready:connectionPoint:electrical:breakerRating = 200.0
+    float simready:connectionPoint:electrical:powerFactor = 1.0
 }
 ```
 
@@ -237,24 +237,24 @@ def Xform "battery_bus" (
 )
 {
     # Semantic identity (base namespace)
-    token connectionPoint:domain = "electrical"
-    token connectionPoint:direction = "bidirectional"
-    token connectionPoint:system = "battery"
-    token connectionPoint:disconnectType = "bus_bar"
-    float connectionPoint:serviceClearance = 0.5
+    token simready:connectionPoint:domain = "electrical"
+    token simready:connectionPoint:direction = "bidirectional"
+    token simready:connectionPoint:system = "battery"
+    token simready:connectionPoint:disconnectType = "bus_bar"
+    float simready:connectionPoint:serviceClearance = 0.5
 
     # Physical connection geometry (electrical domain)
-    float connectionPoint:electrical:matingDepth = 0.0
+    float simready:connectionPoint:electrical:matingDepth = 0.0
 
     # Operating parameters (electrical domain)
-    float connectionPoint:electrical:nominalVoltage = 540.0
-    float connectionPoint:electrical:maxCurrent = 500.0
-    int connectionPoint:electrical:phases = 1
-    float connectionPoint:electrical:frequency = 0.0
-    token connectionPoint:electrical:connectorType = "bus_bar"
-    float connectionPoint:electrical:ratedPower = 250000.0
-    float connectionPoint:electrical:breakerRating = 600.0
-    float connectionPoint:electrical:powerFactor = 0.0
+    float simready:connectionPoint:electrical:nominalVoltage = 540.0
+    float simready:connectionPoint:electrical:maxCurrent = 500.0
+    int simready:connectionPoint:electrical:phases = 1
+    float simready:connectionPoint:electrical:frequency = 0.0
+    token simready:connectionPoint:electrical:connectorType = "bus_bar"
+    float simready:connectionPoint:electrical:ratedPower = 250000.0
+    float simready:connectionPoint:electrical:breakerRating = 600.0
+    float simready:connectionPoint:electrical:powerFactor = 0.0
 }
 ```
 
@@ -272,27 +272,27 @@ def Xform "monitoring_port" (
 )
 {
     # Semantic identity (base namespace)
-    token connectionPoint:domain = "network"
-    token connectionPoint:direction = "bidirectional"
-    token connectionPoint:system = "mgmt"
-    token connectionPoint:disconnectType = "RJ45"
-    float connectionPoint:serviceClearance = 0.1
+    token simready:connectionPoint:domain = "network"
+    token simready:connectionPoint:direction = "bidirectional"
+    token simready:connectionPoint:system = "mgmt"
+    token simready:connectionPoint:disconnectType = "RJ45"
+    float simready:connectionPoint:serviceClearance = 0.1
 
     # Physical connection geometry (network domain)
-    float connectionPoint:network:portWidth = 0.01118
-    float connectionPoint:network:portHeight = 0.0064
-    float connectionPoint:network:matingDepth = 0.011
+    float simready:connectionPoint:network:portWidth = 0.01118
+    float simready:connectionPoint:network:portHeight = 0.0064
+    float simready:connectionPoint:network:matingDepth = 0.011
 
     # Operating parameters (network domain)
-    token connectionPoint:network:portType = "RJ45"
-    token connectionPoint:network:protocol = "SNMP"
-    token connectionPoint:network:dataRate = "100Mbps"
-    token connectionPoint:network:medium = "copper"
-    token connectionPoint:network:fabricRole = "mgmt"
-    token[] connectionPoint:network:supportedLineRates = ["100Mbps"]
-    token[] connectionPoint:network:supportedConfigurations = []
-    token[] connectionPoint:network:allowedTransceivers = []
-    bool connectionPoint:network:hotPlugCapable = true
+    token simready:connectionPoint:network:portType = "RJ45"
+    token simready:connectionPoint:network:protocol = "SNMP"
+    token simready:connectionPoint:network:dataRate = "100Mbps"
+    token simready:connectionPoint:network:medium = "copper"
+    token simready:connectionPoint:network:fabricRole = "mgmt"
+    token[] simready:connectionPoint:network:supportedLineRates = ["100Mbps"]
+    token[] simready:connectionPoint:network:supportedConfigurations = []
+    token[] simready:connectionPoint:network:allowedTransceivers = []
+    bool simready:connectionPoint:network:hotPlugCapable = true
 }
 ```
 
@@ -315,24 +315,24 @@ def Xform "air_intake_main" (
 )
 {
     # Semantic identity (base namespace)
-    token connectionPoint:domain = "airflow"
-    token connectionPoint:direction = "input"
-    token connectionPoint:system = "equipment_cooling"
-    token connectionPoint:disconnectType = "open_vent"
-    float connectionPoint:serviceClearance = 0.5
+    token simready:connectionPoint:domain = "airflow"
+    token simready:connectionPoint:direction = "input"
+    token simready:connectionPoint:system = "equipment_cooling"
+    token simready:connectionPoint:disconnectType = "open_vent"
+    float simready:connectionPoint:serviceClearance = 0.5
 
     # Physical connection geometry (airflow domain)
-    float connectionPoint:airflow:interfaceWidth = 0.60
-    float connectionPoint:airflow:interfaceHeight = 1.20
-    float connectionPoint:airflow:freeAreaRatio = 0.55
+    float simready:connectionPoint:airflow:interfaceWidth = 0.60
+    float simready:connectionPoint:airflow:interfaceHeight = 1.20
+    float simready:connectionPoint:airflow:freeAreaRatio = 0.55
 
     # Operating parameters (airflow domain)
-    float connectionPoint:airflow:designAirflowRate = 0.80
-    float connectionPoint:airflow:maxAirflowRate = 1.20
-    float connectionPoint:airflow:designTemperature = 24.0
-    float connectionPoint:airflow:maxTemperature = 40.0
-    float connectionPoint:airflow:staticPressure = 30.0
-    token connectionPoint:airflow:filterType = "MERV_8"
+    float simready:connectionPoint:airflow:designAirflowRate = 0.80
+    float simready:connectionPoint:airflow:maxAirflowRate = 1.20
+    float simready:connectionPoint:airflow:designTemperature = 24.0
+    float simready:connectionPoint:airflow:maxTemperature = 40.0
+    float simready:connectionPoint:airflow:staticPressure = 30.0
+    token simready:connectionPoint:airflow:filterType = "MERV_8"
 }
 ```
 
@@ -350,24 +350,24 @@ def Xform "air_exhaust_main" (
 )
 {
     # Semantic identity (base namespace)
-    token connectionPoint:domain = "airflow"
-    token connectionPoint:direction = "output"
-    token connectionPoint:system = "equipment_cooling"
-    token connectionPoint:disconnectType = "open_vent"
-    float connectionPoint:serviceClearance = 0.3
+    token simready:connectionPoint:domain = "airflow"
+    token simready:connectionPoint:direction = "output"
+    token simready:connectionPoint:system = "equipment_cooling"
+    token simready:connectionPoint:disconnectType = "open_vent"
+    float simready:connectionPoint:serviceClearance = 0.3
 
     # Physical connection geometry (airflow domain)
-    float connectionPoint:airflow:interfaceWidth = 0.55
-    float connectionPoint:airflow:interfaceHeight = 1.00
-    float connectionPoint:airflow:freeAreaRatio = 0.65
+    float simready:connectionPoint:airflow:interfaceWidth = 0.55
+    float simready:connectionPoint:airflow:interfaceHeight = 1.00
+    float simready:connectionPoint:airflow:freeAreaRatio = 0.65
 
     # Operating parameters (airflow domain)
-    float connectionPoint:airflow:designAirflowRate = 0.80
-    float connectionPoint:airflow:maxAirflowRate = 1.20
-    float connectionPoint:airflow:designTemperature = 40.0
-    float connectionPoint:airflow:maxTemperature = 55.0
-    float connectionPoint:airflow:staticPressure = 25.0
-    token connectionPoint:airflow:filterType = "none"
+    float simready:connectionPoint:airflow:designAirflowRate = 0.80
+    float simready:connectionPoint:airflow:maxAirflowRate = 1.20
+    float simready:connectionPoint:airflow:designTemperature = 40.0
+    float simready:connectionPoint:airflow:maxTemperature = 55.0
+    float simready:connectionPoint:airflow:staticPressure = 25.0
+    token simready:connectionPoint:airflow:filterType = "none"
 }
 ```
 
@@ -377,9 +377,9 @@ def Xform "air_exhaust_main" (
 
 ### Input vs output: same domain, different roles
 
-The UPS demonstrates that `connectionPoint:direction` is essential for
+The UPS demonstrates that `simready:connectionPoint:direction` is essential for
 distinguishing connections within the same domain. All five electrical
-connections are `connectionPoint:domain = "electrical"`, but they serve three
+connections are `simready:connectionPoint:domain = "electrical"`, but they serve three
 distinct roles:
 
 | Connection | direction | system | Distinguishing characteristic |
@@ -390,7 +390,7 @@ distinct roles:
 | Output Feed 2 | `output` | `power` | Protected AC to downstream loads |
 | Battery Bus | `bidirectional` | `battery` | DC, charges and discharges |
 
-A simulation tool querying for all `connectionPoint:direction == "output"`
+A simulation tool querying for all `simready:connectionPoint:direction == "output"`
 connections on a UPS gets the two output feeds -- the connections whose
 `ratedPower` determines what load the UPS can serve. This is a query that
 was impossible under v0.1.0 where a single `aif:spec:outputVoltage` on the
@@ -430,7 +430,7 @@ carries its own values regardless of what the other connections look like.
 
 The relationship between the two output feeds (independent, load-sharing, or
 redundant) and the UPS's role in a larger N+1 or 2N redundancy scheme are not
-expressed in the v0.2.0 vocabulary. The `connectionPoint:redundancyGroup`
+expressed in the v0.2.0 vocabulary. The `simready:connectionPoint:redundancyGroup`
 property is reserved in the parent specification for when this use case is
 addressed. The UPS equipment class is the natural vehicle for developing that
 pattern, as redundancy is the UPS's primary design concern.
