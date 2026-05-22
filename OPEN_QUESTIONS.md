@@ -764,3 +764,138 @@ CAD/PLM layering model described in Q8.
 > "Does treating the prim name as physical identity and logical names as
 > deployment-specific properties work for the networking team? Is there a case
 > where the physical port identity isn't stable across installations?"
+
+---
+
+## Q10: Multi-conductor electrical connections (e.g. 3-phase lug groupings)
+
+**Added:** May 19, 2026
+**Status:** Interim solution documented; awaiting Vertiv confirmation
+
+### Context
+
+Real-world electrical equipment frequently has a single 3-phase circuit that
+terminates at multiple physical locations on the equipment -- typically three
+separate lugs on a terminal block, one per phase conductor. The Vertiv CDU
+asset (CD 1350) received in May 2026 contains three electrical connection
+points, each identified with `nominal_voltage` metadata. Pending Vertiv
+confirmation, these appear to represent the three phase conductors of a single
+3-phase power supply rather than three independent circuits.
+
+This creates a tension between the spec's two levels of abstraction:
+
+- **Functional interface level:** One 3-phase circuit = one logical connection
+  point. The `phases = 3` property on a single CP prim fully describes the
+  circuit for simulation boundary conditions, BOM generation, and cable run
+  calculations. This aligns with Use Cases 1 and 3.
+
+- **Physical geometry level:** Three conductor termination points = three
+  spatial locations. A robotic assembly system (Use Case 2) would need to know
+  the exact position of each lug to attach or verify a conductor.
+
+The spec's Core Rule #1 ("one prim per connection, one domain per prim")
+treats a connection point as a functional interface. The `phases` property
+on the electrical domain already encodes the number of conductors. But the
+spec does not currently provide a grouping mechanism to express "these N prims
+are part of the same circuit."
+
+### Relationship to deferred design questions
+
+The deferred `redundancyGroup` property (reserved, not yet specified) addresses
+A/B power feeds and N+1 UPS configurations -- connections that are
+*functionally independent* but participate in a shared resilience scheme.
+That is a different concept from multi-conductor grouping, where the
+connections are *functionally identical* and form a single circuit.
+
+The deferred Q3 (connection relationships) acknowledged that cross-connection
+topology is an orchestration-layer problem. Per-conductor grouping within a
+single equipment interface is a narrower variant of that same problem, but one
+that could be addressed with a simpler mechanism (e.g. a shared `circuitGroup`
+identifier) without requiring the full relationship model.
+
+### Interim solution (May 22 spec lock)
+
+For the v0.2.0 EA spec and the CDU exemplar prototype:
+
+1. **Model as a single CP prim** with `phases = 3`, positioned at the physical
+   location closest to the center of the conductor grouping.
+2. **Deactivate the other two conductor prims** in the prototype. This
+   preserves the geometry data for future use without implying that each lug
+   is an independent connection point.
+3. The Xform position represents the logical power entry point for the
+   equipment, not an individual conductor termination.
+
+This approach satisfies the simulation and BOM use cases without opening the
+relationship design question under the May 22 spec lock deadline. The
+deactivated prims remain available if per-conductor modeling is needed later.
+
+### Example (interim model)
+
+```usda
+def Xform "power_input_main" (
+    purpose = "guide"
+)
+{
+    # Semantic identity (base namespace)
+    token simready:connectionPoint:domain = "electrical"
+    token simready:connectionPoint:direction = "input"
+    token simready:connectionPoint:system = "power"
+    token simready:connectionPoint:disconnectType = "hardwired"
+    float simready:connectionPoint:serviceClearance = 0.4
+
+    # Physical connection geometry (electrical domain)
+    float simready:connectionPoint:electrical:matingDepth = 0.0
+
+    # Operating parameters (electrical domain)
+    # phases = 3 encodes the 3-phase circuit; individual conductor
+    # positions are below the CP vocabulary's level of abstraction
+    float simready:connectionPoint:electrical:nominalVoltage = 480.0
+    float simready:connectionPoint:electrical:maxCurrent = 60.0
+    int simready:connectionPoint:electrical:phases = 3
+    float simready:connectionPoint:electrical:frequency = 60.0
+    token simready:connectionPoint:electrical:connectorType = "hardwired"
+    float simready:connectionPoint:electrical:ratedPower = 28800.0
+    float simready:connectionPoint:electrical:breakerRating = 80.0
+    float simready:connectionPoint:electrical:powerFactor = 0.95
+}
+
+# The two remaining conductor prims are deactivated in the prototype.
+# They preserve geometry positions for potential future per-conductor
+# modeling but do not carry CP vocabulary properties.
+```
+
+### What Vertiv's answer changes
+
+- **If three lugs, one 3-phase circuit (expected):** The interim solution is
+  correct. An informative note should be added to the electrical domain section
+  of the parent spec clarifying that multi-conductor terminations are modeled
+  as a single CP with `phases` encoding the conductor count.
+
+- **If three independent single-phase feeds:** Each is a genuinely independent
+  connection point (separate breaker, separate cable run) and should be modeled
+  as three separate CP prims. This scenario would also be a candidate for the
+  deferred `redundancyGroup` property if the feeds participate in a resilience
+  scheme.
+
+### Future direction
+
+If Use Case 2 (robotic assembly) demands per-conductor spatial positioning,
+the natural evolution path is:
+
+- Define a `circuitGroup` property (or equivalent grouping mechanism) as part
+  of the post-EA relationship work scoped under Q3.
+- Each conductor termination becomes its own CP prim with a shared
+  `circuitGroup` identifier linking them to the parent circuit.
+- The parent circuit's `phases` property and the count of grouped prims must
+  agree (validator check).
+
+This evolution fits cleanly within the schema maturity progression
+(attributes first, then promotion to applied schemas as adoption matures)
+and does not require changes to the existing v0.2.0 property set.
+
+### Discussion question
+
+> "Is the single-prim model with `phases = 3` sufficient for all three use
+> cases in the near term? If robotic assembly eventually needs per-conductor
+> positions, should the grouping mechanism live in the CP vocabulary (e.g.
+> `circuitGroup`) or in the orchestration/relationship layer deferred under Q3?"

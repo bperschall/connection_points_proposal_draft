@@ -4,7 +4,7 @@ Copyright &copy; 2026, NVIDIA Corporation, version 0.2.0 (DRAFT), May 12, 2026
 
 Beau Perschall
 
-**Feedback deadline: May 15, 2026**
+**Vocabulary feedback deadline: May 29, 2026**
 
 > **Quick reference for implementers and AI agents:** See
 > [Appendix A](#appendix-a-quick-reference-for-implementers-and-ai-agents)

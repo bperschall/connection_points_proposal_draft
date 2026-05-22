@@ -1,6 +1,6 @@
 # Separation of Concerns for Connection Points in USD
 
-Copyright &copy; 2026, NVIDIA Corporation, version 0.2 (DRAFT), May 8, 2026
+Copyright &copy; 2026, NVIDIA Corporation, version 0.2, May 22, 2026
 
 Beau Perschall
 
