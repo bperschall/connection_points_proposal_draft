@@ -4,6 +4,11 @@ Copyright &copy; 2026, NVIDIA Corporation, version 0.2.0 (DRAFT), May 12, 2026
 
 **Parent specification:** [Connection Points Vocabulary Spec v0.2.0](CONNECTION_POINTS_VOCABULARY_SPEC.md)
 
+> **Status:** This exemplar is in draft mode as part of the Connection Points
+> Vocabulary v0.2.0 draft. See the
+> [parent specification](CONNECTION_POINTS_VOCABULARY_SPEC.md) for the current
+> acceptance status and feedback instructions.
+
 This exemplar applies the Connection Points vocabulary to an XDU1350-class
 Coolant Distribution Unit. It exercises the thermal domain heavily; the
 electrical, network, and airflow connections are simpler but carry the full
@@ -27,6 +32,7 @@ needs power and typically exposes a BMS/monitoring network port.
 | TCS Return | Warm coolant comes back IN from compute racks | thermal |
 | Power Input | Electrical power feed for pumps and controls | electrical |
 | BMS Network | Monitoring/control network port for building management | network (optional) |
+| Dry Contact | Relay output for customer-added sensors, lights, or accessories | electrical (auxiliary) |
 | Air Intake | Room air drawn in to cool internal electronics | airflow |
 | Air Exhaust | Heated air expelled back into the room | airflow |
 
@@ -237,6 +243,37 @@ def Xform "power_input_main" (
     float simready:connectionPoint:electrical:ratedPower = 28800.0
     float simready:connectionPoint:electrical:breakerRating = 80.0
     float simready:connectionPoint:electrical:powerFactor = 0.95
+}
+```
+
+### Dry Contact (auxiliary electrical, customer-wired)
+
+Relay output terminal for customer-added equipment such as sensors, lights, or
+alarm indicators. The CDU provides the dry contact interface but does not supply
+voltage -- customers wire their own devices into these terminals. This is a
+fundamentally different use case from the power input above: dry contacts are
+low-voltage auxiliary interfaces, not primary power paths.
+
+Only the electrical properties that apply to dry contacts are populated.
+Power-distribution properties (`phases`, `frequency`, `powerFactor`) are
+omitted per the partial population pattern.
+
+```usda
+def Xform "dry_contact_alarm_01" (
+    purpose = "guide"
+)
+{
+    # Semantic identity (base namespace)
+    token simready:connectionPoint:domain = "electrical"
+    token simready:connectionPoint:direction = "output"
+    token simready:connectionPoint:system = "auxiliary"
+    token simready:connectionPoint:disconnectType = "terminal_block"
+    float simready:connectionPoint:serviceClearance = 0.15
+
+    # Operating parameters (electrical domain -- auxiliary subset)
+    token simready:connectionPoint:electrical:connectorType = "dry_contact"
+    float simready:connectionPoint:electrical:nominalVoltage = 24.0
+    float simready:connectionPoint:electrical:maxCurrent = 1.0
 }
 ```
 

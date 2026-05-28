@@ -4,6 +4,12 @@ Copyright &copy; 2026, NVIDIA Corporation, version 0.2, May 22, 2026
 
 Beau Perschall
 
+> **Status:** This AI Factory Connection Points specification is accepted as
+> v0.2.0 and will drive SimReady USD workflows going forward. Open questions
+> remain and will shape v0.3.0. Stakeholders are encouraged to review this
+> specification, identify where clarity is missing, and engage with the SimReady
+> team to strengthen it for the next revision (v0.3.0 ETA: TBD).
+
 > **See also:** The full-length version of this document
 > ([AIF_Connection_Points_Proposal.md](AIF_Connection_Points_Proposal.md))
 > contains additional narrative detail and extended design rationale.

@@ -1,4 +1,4 @@
-# Connection Points: Open Questions & Strawman Recommendations
+# Connection Points: Open Questions & Design Decisions
 
 Companion document to
 [AIF_Connection_Points_Proposal_Concise.md](AIF_Connection_Points_Proposal_Concise.md)
@@ -6,6 +6,28 @@ for use in stakeholder alignment discussions.
 
 Each question includes context, a concrete USD example, and a strawman
 recommendation aligned with the proposal's direction.
+
+---
+
+## Status Index
+
+| # | Question | Status | Target Version |
+|---|----------|--------|----------------|
+| Q1 | [Base vocabulary scope](#q1-base-vocabulary-scope) | Open | v0.2.0 |
+| Q2 | [Multi-domain connection points](#q2-multi-domain-connection-points-update---may-7-2026) | **Decided** -- Option B (co-located single-domain prims) | v0.2.0 |
+| Q3 | [Connection relationships](#q3-connection-relationships-deferred---april-28-2026) | **Deferred** -- out of scope for v0.2.0 | v0.3.0 |
+| Q4 | [Layer authoring model](#q4-layer-authoring-model-confirmed---april-28-2026) | **Decided** -- separate layer (SHOULD) | v0.2.0 |
+| Q5 | [guide purpose](#q5-guide-purpose-investigated---april-30-2026) | **Decided** -- SHOULD, not MUST | v0.2.0 |
+| Q6 | [Units and standards](#q6-units-and-standards-confirmed---april-28-2026) | **Decided** -- SI enforced | v0.2.0 |
+| Q7 | [Backward compatibility](#q7-backward-compatibility) | Open | v0.3.0 |
+| Q8 | [CAD/PLM integration boundaries](#q8-cadplm-integration-boundaries) | Open | v0.3.0 |
+| Q9 | [Port naming and hierarchy](#q9-port-naming-and-hierarchy) | Open | v0.3.0 |
+| Q10 | [Fluid type naming: "liquid" vs "fluid"](#q10-fluid-type-naming-liquid-vs-fluid) | Open | v0.3.0 |
+| Q11 | [Glycol type disambiguation](#q11-glycol-type-disambiguation) | Open | v0.3.0 |
+| Q12 | [Concentration as separate property (massFraction)](#q12-concentration-as-separate-property-massfraction) | Open | v0.3.0 |
+| Q13 | [Gas classification and humidity modeling](#q13-gas-classification-and-humidity-modeling) | Open | v0.3.0 |
+| Q14 | [Two-phase fluid state variables](#q14-two-phase-fluid-state-variables) | Open | v0.3.0 |
+| Q15 | [staticPressure rename to staticPressureDifferential](#q15-staticpressure-rename-to-staticpressuredifferential) | Open (pending expert confirmation) | v0.3.0 |
 
 ---
 
@@ -767,135 +789,225 @@ CAD/PLM layering model described in Q8.
 
 ---
 
-## Q10: Multi-conductor electrical connections (e.g. 3-phase lug groupings)
+## Q10: Fluid type naming -- "liquid" vs "fluid"
 
-**Added:** May 19, 2026
-**Status:** Interim solution documented; awaiting Vertiv confirmation
+**Added:** May 28, 2026
+**Status:** Open (v0.3.0)
+**Source:** Trane (Scott Munns, Jim Spielbauer) via Joel Gouker, May 26
 
 ### Context
 
-Real-world electrical equipment frequently has a single 3-phase circuit that
-terminates at multiple physical locations on the equipment -- typically three
-separate lugs on a terminal block, one per phase conductor. The Vertiv CDU
-asset (CD 1350) received in May 2026 contains three electrical connection
-points, each identified with `nominal_voltage` metadata. Pending Vertiv
-confirmation, these appear to represent the three phase conductors of a single
-3-phase power supply rather than three independent circuits.
+The thermal domain currently uses the term "fluid" in property names
+(`fluidType`) and descriptive text. Trane's feedback: a fluid can be a gas or a
+liquid. In the thermal (liquid cooling) domain, the working medium stays in
+liquid form, which allows assumptions like incompressibility. The property name
+should say "liquid" to be precise.
 
-This creates a tension between the spec's two levels of abstraction:
+The spec already makes the liquid/gas architectural split (thermal domain for
+liquid cooling, airflow domain for gas-phase cooling), and the SG-E1 naming
+note (applied May 11) clarifies this in text. The question is whether the
+property name itself should change.
 
-- **Functional interface level:** One 3-phase circuit = one logical connection
-  point. The `phases = 3` property on a single CP prim fully describes the
-  circuit for simulation boundary conditions, BOM generation, and cable run
-  calculations. This aligns with Use Cases 1 and 3.
+### Design tension
 
-- **Physical geometry level:** Three conductor termination points = three
-  spatial locations. A robotic assembly system (Use Case 2) would need to know
-  the exact position of each lug to attach or verify a conductor.
+Renaming `fluidType` to `liquidType` (or `coolantType`) is a breaking change
+to all exemplars, validators, and reviewer-facing artifacts. It also potentially
+excludes adjacent industries that might use the thermal namespace for non-liquid
+fluids (e.g. supercritical CO2 cooling loops, which behave as neither
+traditional liquid nor gas).
 
-The spec's Core Rule #1 ("one prim per connection, one domain per prim")
-treats a connection point as a functional interface. The `phases` property
-on the electrical domain already encodes the number of conductors. But the
-spec does not currently provide a grouping mechanism to express "these N prims
-are part of the same circuit."
+### Strawman recommendation
 
-### Relationship to deferred design questions
-
-The deferred `redundancyGroup` property (reserved, not yet specified) addresses
-A/B power feeds and N+1 UPS configurations -- connections that are
-*functionally independent* but participate in a shared resilience scheme.
-That is a different concept from multi-conductor grouping, where the
-connections are *functionally identical* and form a single circuit.
-
-The deferred Q3 (connection relationships) acknowledged that cross-connection
-topology is an orchestration-layer problem. Per-conductor grouping within a
-single equipment interface is a narrower variant of that same problem, but one
-that could be addressed with a simpler mechanism (e.g. a shared `circuitGroup`
-identifier) without requiring the full relationship model.
-
-### Interim solution (May 22 spec lock)
-
-For the v0.2.0 EA spec and the CDU exemplar prototype:
-
-1. **Model as a single CP prim** with `phases = 3`, positioned at the physical
-   location closest to the center of the conductor grouping.
-2. **Deactivate the other two conductor prims** in the prototype. This
-   preserves the geometry data for future use without implying that each lug
-   is an independent connection point.
-3. The Xform position represents the logical power entry point for the
-   equipment, not an individual conductor termination.
-
-This approach satisfies the simulation and BOM use cases without opening the
-relationship design question under the May 22 spec lock deadline. The
-deactivated prims remain available if per-conductor modeling is needed later.
-
-### Example (interim model)
-
-```usda
-def Xform "power_input_main" (
-    purpose = "guide"
-)
-{
-    # Semantic identity (base namespace)
-    token simready:connectionPoint:domain = "electrical"
-    token simready:connectionPoint:direction = "input"
-    token simready:connectionPoint:system = "power"
-    token simready:connectionPoint:disconnectType = "hardwired"
-    float simready:connectionPoint:serviceClearance = 0.4
-
-    # Physical connection geometry (electrical domain)
-    float simready:connectionPoint:electrical:matingDepth = 0.0
-
-    # Operating parameters (electrical domain)
-    # phases = 3 encodes the 3-phase circuit; individual conductor
-    # positions are below the CP vocabulary's level of abstraction
-    float simready:connectionPoint:electrical:nominalVoltage = 480.0
-    float simready:connectionPoint:electrical:maxCurrent = 60.0
-    int simready:connectionPoint:electrical:phases = 3
-    float simready:connectionPoint:electrical:frequency = 60.0
-    token simready:connectionPoint:electrical:connectorType = "hardwired"
-    float simready:connectionPoint:electrical:ratedPower = 28800.0
-    float simready:connectionPoint:electrical:breakerRating = 80.0
-    float simready:connectionPoint:electrical:powerFactor = 0.95
-}
-
-# The two remaining conductor prims are deactivated in the prototype.
-# They preserve geometry positions for potential future per-conductor
-# modeling but do not carry CP vocabulary properties.
-```
-
-### What Vertiv's answer changes
-
-- **If three lugs, one 3-phase circuit (expected):** The interim solution is
-  correct. An informative note should be added to the electrical domain section
-  of the parent spec clarifying that multi-conductor terminations are modeled
-  as a single CP with `phases` encoding the conductor count.
-
-- **If three independent single-phase feeds:** Each is a genuinely independent
-  connection point (separate breaker, separate cable run) and should be modeled
-  as three separate CP prims. This scenario would also be a candidate for the
-  deferred `redundancyGroup` property if the feeds participate in a resilience
-  scheme.
-
-### Future direction
-
-If Use Case 2 (robotic assembly) demands per-conductor spatial positioning,
-the natural evolution path is:
-
-- Define a `circuitGroup` property (or equivalent grouping mechanism) as part
-  of the post-EA relationship work scoped under Q3.
-- Each conductor termination becomes its own CP prim with a shared
-  `circuitGroup` identifier linking them to the parent circuit.
-- The parent circuit's `phases` property and the count of grouped prims must
-  agree (validator check).
-
-This evolution fits cleanly within the schema maturity progression
-(attributes first, then promotion to applied schemas as adoption matures)
-and does not require changes to the existing v0.2.0 property set.
+`fluidType` is retained for v0.2.0. For v0.3.0, if a rename is warranted after
+multi-partner discussion, `coolantType` is preferable to `liquidType` because
+it is use-case-descriptive rather than phase-descriptive, and does not exclude
+supercritical fluids.
 
 ### Discussion question
 
-> "Is the single-prim model with `phases = 3` sufficient for all three use
-> cases in the near term? If robotic assembly eventually needs per-conductor
-> positions, should the grouping mechanism live in the CP vocabulary (e.g.
-> `circuitGroup`) or in the orchestration/relationship layer deferred under Q3?"
+> "Should `fluidType` be renamed to `liquidType` or `coolantType` for v0.3.0?
+> Does the rename exclude valid thermal domain use cases (supercritical fluids)?
+> Multi-partner input needed: Trane, Vertiv, Cadence."
+
+---
+
+## Q11: Glycol type disambiguation
+
+**Added:** May 28, 2026
+**Status:** Open (v0.3.0)
+**Source:** Trane (Scott Munns, Jim Spielbauer) via Joel Gouker, May 26
+
+### Context
+
+Current vocabulary tokens include `glycol_water_30` and `glycol_water_50`.
+These do not distinguish between ethylene glycol and propylene glycol.
+Datacenters almost exclusively use propylene glycol (lower toxicity), but the
+tokens are ambiguous.
+
+Under the open vocabulary principle, more-specific tokens (e.g.
+`propylene_glycol_water_30`, `ethylene_glycol_water_30`) can be introduced as
+recommended tokens in v0.3.0 without invalidating existing tokens -- old tokens
+remain valid, and validators already accept unknown tokens with a warning.
+
+### Strawman recommendation
+
+Introduce glycol-type-specific tokens (`propylene_glycol_water_30`,
+`ethylene_glycol_water_30`) as recommended values. Retain the existing generic
+`glycol_water_*` tokens as valid shorthand for cases where the glycol type is
+unknown or unspecified. This is additive, not breaking.
+
+### Discussion question
+
+> "Should v0.3.0 introduce glycol-type-specific tokens alongside the existing
+> generic tokens? Should the generic `glycol_water_*` tokens be deprecated or
+> retained as shorthand where the glycol type is unknown?"
+
+---
+
+## Q12: Concentration as separate property (massFraction)
+
+**Added:** May 28, 2026
+**Status:** Open (v0.3.0)
+**Source:** Trane (Scott Munns, Jim Spielbauer) via Joel Gouker, May 26
+
+### Context
+
+The May 7 stakeholder decision (Vertiv working session) simplified fluid type
+to a single descriptive token with embedded concentration (e.g.
+`glycol_water_30`). Trane's position: concentration should not be embedded in
+the token name. Simulation engines need the numeric concentration value for
+thermophysical property lookups, and a separate `massFraction` property is the
+correct modeling approach.
+
+Both perspectives are valid in their respective contexts. Vertiv's point:
+emerging refrigerant blends make concentration a poor standalone property
+because the fluid name itself is the meaningful identifier for simulation tool
+lookup. Trane's point: thermodynamic solvers need the numeric value for
+interpolation in property tables.
+
+Resolving this requires a dedicated session with Trane, Vertiv, and Cadence (as
+the simulation consumer).
+
+### Strawman recommendation
+
+A candidate property name such as
+`simready:connectionPoint:thermal:massFraction` could carry the numeric
+concentration value alongside the descriptive fluid token. Whether this is the
+right approach -- or whether concentration should remain embedded in the token,
+or modeled differently for multi-component fluids -- requires multi-partner
+input before any commitment.
+
+### Discussion question
+
+> "Should the vocabulary support both the descriptive token (fluid identity) and
+> a separate numeric concentration property? If so, which is the primary key for
+> simulation tool lookup -- the token or the numeric value? Multi-partner
+> alignment needed: Trane, Vertiv, Cadence."
+
+---
+
+## Q13: Gas classification and humidity modeling
+
+**Added:** May 28, 2026
+**Status:** Open (v0.3.0)
+**Source:** Trane (Scott Munns, Jim Spielbauer) via Joel Gouker, May 26
+
+### Context
+
+The airflow domain currently assumes ambient air and has no `fluidType`
+equivalent or humidity modeling. Trane recommends distinguishing `DryAir` from
+`MoistAir` and adding a humidity ratio as a state property for moist air
+modeling.
+
+For datacenter v0.2.0, this gap is acceptable (airflow = ambient air in all
+current exemplars). For v0.3.0 or adjacent industries, nitrogen cooling
+environments, helium environments, or humidity-controlled cleanrooms would
+benefit from:
+
+- A `gasType` token in the airflow domain (e.g. `DryAir`, `MoistAir`,
+  `nitrogen`)
+- A `humidityRatio` property for moist air modeling
+
+### Strawman recommendation
+
+Add a `gasType` token property to the airflow domain with `DryAir` as the
+default value for datacenter use cases. Add `humidityRatio` as an optional
+property for moist air modeling. Scope the initial implementation to datacenter
+scenarios (free cooling, economizer) before expanding to adjacent industries.
+
+### Discussion question
+
+> "Does the airflow domain need gas type and humidity properties for datacenter
+> use cases, or only for adjacent industries? If datacenter-relevant, what are
+> the priority scenarios (humidity-sensitive IT equipment, free cooling
+> transitions, economizer modeling)?"
+
+---
+
+## Q14: Two-phase fluid state variables
+
+**Added:** May 28, 2026
+**Status:** Open (v0.3.0)
+**Source:** Trane (Scott Munns, Jim Spielbauer) via Joel Gouker, May 26
+
+### Context
+
+Trane flags that future datacenter cooling technologies may require two-phase
+fluid modeling: refrigerant-based two-phase heat sinks, two-phase immersion
+cooling, and potentially steam systems. Their recommendation: pressure +
+specific enthalpy as independent state variables, which uniquely define
+thermodynamic state regardless of phase region (subcooled liquid, two-phase,
+superheated vapor, supercritical).
+
+Current vocabulary has refrigerant tokens (`refrigerant_R410A`, etc.) but no
+phase-specific state variable properties beyond temperature and pressure.
+Two-phase immersion cooling is an emerging datacenter technology not yet
+addressed in the exemplars.
+
+### Strawman recommendation
+
+A candidate property such as
+`simready:connectionPoint:thermal:specificEnthalpy` could serve as one of two
+independent state variables (alongside pressure) that uniquely define
+thermodynamic state regardless of phase region. Whether this is the right
+approach -- or whether temperature remains sufficient for datacenter use cases
+-- requires stakeholder input before any commitment.
+
+### Discussion question
+
+> "When two-phase immersion cooling assets enter the pipeline, should the
+> thermal domain adopt pressure + specific enthalpy as the canonical
+> thermodynamic state pair? Does this replace or supplement temperature as a
+> state variable?"
+
+---
+
+## Q15: staticPressure rename to staticPressureDifferential
+
+**Added:** May 28, 2026
+**Status:** Open (v0.3.0, pending expert confirmation)
+**Source:** Steve Ghee (PTC), May 8
+
+### Context
+
+The airflow domain property `simready:connectionPoint:airflow:staticPressure`
+is described in the spec as "pressure differential across the interface or
+filter" -- but the property name reads as absolute static pressure. Steve Ghee
+recommends renaming to `staticPressureDifferential` for clarity.
+
+The rename was accepted in principle during May 8 triage and routed to Kourosh
+Nemati and Mark Fenton for domain expert confirmation. No response received as
+of May 28. Last attempt to get confirmation in progress before the May 29
+vocabulary lock.
+
+### Strawman recommendation
+
+Rename `staticPressure` to `staticPressureDifferential` for v0.3.0. The
+property description already says "differential" -- the name should match.
+
+### Discussion question
+
+> "Should this rename proceed for v0.3.0 regardless of Kourosh/Mark response?
+> If renamed, should `operatingPressure` in the thermal domain also be reviewed
+> for similar naming precision (gauge pressure vs absolute)?"
+

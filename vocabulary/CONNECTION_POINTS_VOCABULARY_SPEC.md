@@ -4,7 +4,11 @@ Copyright &copy; 2026, NVIDIA Corporation, version 0.2.0 (DRAFT), May 12, 2026
 
 Beau Perschall
 
-**Vocabulary feedback deadline: May 29, 2026**
+> **Status:** The AI Factory Connection Points Vocabulary is in draft and open
+> to change before acceptance on May 29, 2026 as v0.2.0. Please send all
+> feedback, questions, concerns, and issues to the SimReady team by submitting
+> issues against this repository. Acceptance of this draft does not preclude
+> future revisions.
 
 > **Quick reference for implementers and AI agents:** See
 > [Appendix A](#appendix-a-quick-reference-for-implementers-and-ai-agents)
@@ -399,10 +403,22 @@ For power connections (mains feeds, PDU outputs, UPS bypass).
 | `simready:connectionPoint:electrical:maxCurrent` | float (A) | Rated maximum current draw |
 | `simready:connectionPoint:electrical:phases` | int | Number of phases (typically 3 for datacenter equipment) |
 | `simready:connectionPoint:electrical:frequency` | float (Hz) | Line frequency (50 or 60 Hz, site-specific) |
-| `simready:connectionPoint:electrical:connectorType` | token | Physical connection method (e.g. `hardwired`, `IEC_60309`, `NEMA_L21_30`) |
+| `simready:connectionPoint:electrical:connectorType` | token | Physical connection method (e.g. `hardwired`, `IEC_60309`, `NEMA_L21_30`, `dry_contact`) |
 | `simready:connectionPoint:electrical:ratedPower` | float (W) | Rated power capacity of this connection (e.g. UPS output feed capacity) |
 | `simready:connectionPoint:electrical:breakerRating` | float (A) | Upstream breaker protection rating |
 | `simready:connectionPoint:electrical:powerFactor` | float (0-1) | Manufacturer-specified power factor |
+
+**Auxiliary electrical interfaces (dry contacts):** Not all electrical
+connection points carry primary power. Equipment frequently includes dry contact
+terminals -- relay outputs with no voltage of their own that open or close a
+circuit to signal a condition. These are generic electrical ports for
+customer-added equipment (sensors, lights, alarms, accessories) that the
+manufacturer does not apply directly but customers wire into. Dry contacts use
+`connectorType = "dry_contact"` and typically only populate `nominalVoltage`
+(max switching voltage) and `maxCurrent` (max switching current). Properties
+specific to power distribution (`phases`, `frequency`, `powerFactor`) should be
+omitted. See [Q11](../OPEN_QUESTIONS.md#q11-dry-contacts-and-auxiliary-electrical-interfaces)
+for modeling details and a USD example.
 
 **Regional variation:** Electrical properties are site-specific, not
 equipment-inherent. The same equipment deployed in different regions will have
@@ -747,6 +763,54 @@ without a formal USD applied API schema. If adoption warrants it, these
 properties can be promoted to an applied API schema with no change to property
 names -- existing assets remain valid. This is a deliberate maturity ramp: prove
 the vocabulary with real assets first, formalize later.
+
+### Fluid state modeling refinement (v0.3.0)
+
+The v0.2.0 `fluidType` property uses a single descriptive token to identify
+the working fluid (e.g., `water`, `glycol_water_30`, `refrigerant_R410A`).
+This approach was adopted based on May 7 stakeholder feedback that a single
+token is the meaningful identifier for simulation tool lookup, and that
+separating concentration into its own property creates ambiguity for emerging
+refrigerant blends.
+
+Partner feedback from Trane (Scott Munns, Jim Spielbauer -- May 2026)
+surfaces several areas where this model will need refinement for v0.3.0:
+
+1. **Liquid vs fluid terminology.** The thermal domain is specifically for
+   liquid-phase connections, but the spec uses the broader term "fluid" in
+   places, including the property name `fluidType`. Whether to rename this
+   property (e.g., `liquidType` or `coolantType`) depends on whether adjacent
+   industries would use the thermal namespace for non-liquid fluids such as
+   supercritical CO2.
+
+2. **Glycol type disambiguation.** Current tokens (`glycol_water_30`) don't
+   distinguish ethylene glycol from propylene glycol. Datacenters predominantly
+   use propylene glycol, but the tokens should be unambiguous. More specific
+   tokens (e.g., `propylene_glycol_water_30`) are additive under the open
+   vocabulary principle.
+
+3. **Concentration as a separate property.** Simulation engines need a numeric
+   concentration value for thermophysical property lookups. A separate
+   `massFraction` (or `concentration`) property alongside the fluid identity
+   token would serve this need. This must be reconciled with the May 7
+   simplification decision and validated against how multi-component fluids
+   (refrigerant blends) would be modeled.
+
+4. **Gas classification in the airflow domain.** The airflow domain currently
+   assumes ambient air. Different gas types (dry air, moist air, nitrogen,
+   helium) and additional state properties (humidity ratio for moist air) may
+   be needed for broader applicability.
+
+5. **Two-phase fluid state variables.** Two-phase immersion cooling and
+   refrigerant-based heat sinks require state variables that are independent
+   of phase region. Pressure and specific enthalpy are the recommended pair
+   (they uniquely define thermodynamic state whether subcooled liquid,
+   two-phase, superheated vapor, or supercritical).
+
+These items require a dedicated multi-partner alignment session with Trane,
+Vertiv, and Cadence to converge on the right modeling approach. Property names
+`simready:connectionPoint:thermal:massFraction` and
+`simready:connectionPoint:thermal:specificEnthalpy` are reserved for this work.
 
 ### Additional domains
 
