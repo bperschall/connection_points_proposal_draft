@@ -1,13 +1,13 @@
 # Connection Points Vocabulary: UPS Exemplar
 
-Copyright &copy; 2026, NVIDIA Corporation, version 0.1.0 (DRAFT), May 8, 2026
+Copyright &copy; 2026, NVIDIA Corporation, version 0.2.0, May 29, 2026
 
 **Parent specification:** [Connection Points Vocabulary Spec v0.2.0](CONNECTION_POINTS_VOCABULARY_SPEC.md)
 
-> **Status:** This exemplar is in draft mode as part of the Connection Points
-> Vocabulary v0.2.0 draft. See the
-> [parent specification](CONNECTION_POINTS_VOCABULARY_SPEC.md) for the current
-> acceptance status and feedback instructions.
+> **Status:** This exemplar is accepted as part of the Connection Points
+> Vocabulary v0.2.0. See the
+> [parent specification](CONNECTION_POINTS_VOCABULARY_SPEC.md) for the full
+> acceptance status and feedback instructions for future revisions.
 
 This exemplar applies the Connection Points vocabulary to a 250 kW three-phase
 Uninterruptible Power Supply. It exercises the electrical domain heavily; the

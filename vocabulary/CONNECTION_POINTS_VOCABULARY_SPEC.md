@@ -1,14 +1,15 @@
 # Connection Points Vocabulary Specification v0.2.0
 
-Copyright &copy; 2026, NVIDIA Corporation, version 0.2.0 (DRAFT), May 12, 2026
+Copyright &copy; 2026, NVIDIA Corporation, version 0.2.0, May 29, 2026
 
 Beau Perschall
 
-> **Status:** The AI Factory Connection Points Vocabulary is in draft and open
-> to change before acceptance on May 29, 2026 as v0.2.0. Please send all
-> feedback, questions, concerns, and issues to the SimReady team by submitting
-> issues against this repository. Acceptance of this draft does not preclude
-> future revisions.
+> **Status:** The AI Factory Connection Points Vocabulary is accepted as v0.2.0
+> and will drive SimReady USD attribute naming and value enumeration going
+> forward. Open questions remain and will shape v0.3.0. Stakeholders are
+> encouraged to review this vocabulary, identify where clarity is missing, and
+> engage with the SimReady team to strengthen it for the next revision
+> (v0.3.0 ETA: TBD).
 
 > **Quick reference for implementers and AI agents:** See
 > [Appendix A](#appendix-a-quick-reference-for-implementers-and-ai-agents)
@@ -420,15 +421,20 @@ specific to power distribution (`phases`, `frequency`, `powerFactor`) should be
 omitted. See [Q11](../OPEN_QUESTIONS.md#q11-dry-contacts-and-auxiliary-electrical-interfaces)
 for modeling details and a USD example.
 
-**Regional variation:** Electrical properties are site-specific, not
-equipment-inherent. The same equipment deployed in different regions will have
-different voltage and frequency values. The vocabulary intentionally does not
-hard-code regional assumptions. Where a manufacturer rates equipment for
-multiple configurations, USD variant sets or separate connection point
-sublayers are potential composition strategies. The mechanics of multi-region
-asset composition are out of scope for v0.2.0; the vocabulary defines the
-properties, and the composition approach will be addressed in a future
-revision when real multi-region assets are in hand.
+**Regional variation:** Electrical properties are typically SKU-based, not
+site-configured. Most larger equipment ships with region-specific power
+supplies (e.g. North America 480V/60Hz, rest of world 400V/50Hz, Japan
+100V/50-60Hz), meaning the same product family may have distinct regional
+SKUs with different electrical ratings. Smaller products sometimes use a
+universal power supply that handles multiple regions, but this is the
+exception. The vocabulary intentionally does not hard-code regional
+assumptions. Where a manufacturer offers multiple regional SKUs, each SKU
+should be represented as a separate SimReady asset with its own electrical
+connection point values. USD variant sets or separate connection point
+sublayers are alternative composition strategies. The mechanics of
+multi-region asset composition are out of scope for v0.2.0; the vocabulary
+defines the properties, and the composition approach will be addressed in a
+future revision when real multi-region assets are in hand.
 
 ### Network domain (`simready:connectionPoint:network:`)
 

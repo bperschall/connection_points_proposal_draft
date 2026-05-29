@@ -1,13 +1,13 @@
 # Connection Points Vocabulary: CDU Exemplar
 
-Copyright &copy; 2026, NVIDIA Corporation, version 0.2.0 (DRAFT), May 12, 2026
+Copyright &copy; 2026, NVIDIA Corporation, version 0.2.0, May 29, 2026
 
 **Parent specification:** [Connection Points Vocabulary Spec v0.2.0](CONNECTION_POINTS_VOCABULARY_SPEC.md)
 
-> **Status:** This exemplar is in draft mode as part of the Connection Points
-> Vocabulary v0.2.0 draft. See the
-> [parent specification](CONNECTION_POINTS_VOCABULARY_SPEC.md) for the current
-> acceptance status and feedback instructions.
+> **Status:** This exemplar is accepted as part of the Connection Points
+> Vocabulary v0.2.0. See the
+> [parent specification](CONNECTION_POINTS_VOCABULARY_SPEC.md) for the full
+> acceptance status and feedback instructions for future revisions.
 
 This exemplar applies the Connection Points vocabulary to an XDU1350-class
 Coolant Distribution Unit. It exercises the thermal domain heavily; the
@@ -430,8 +430,11 @@ tool lookup.
 
 ### Regional electrical variation
 
-The power input uses North American values (480V, 60 Hz). The same CDU model
-deployed in Europe would have different electrical property values but identical
-thermal and network connections. This is why electrical properties are
-site-specific, not equipment-inherent -- a point discussed in the parent
-specification's electrical domain section.
+The power input uses North American values (480V, 60 Hz). The same CDU product
+family deployed in Europe ships as a different regional SKU with its own power
+supply rated for 400V/50Hz -- meaning different electrical property values but
+identical thermal and network connections. Japan is a third regional variant
+(100V, 50-60Hz). Smaller products may use a universal power supply, but most
+larger equipment (including CDUs) has region-specific hardware. Each regional
+SKU should be represented as a separate SimReady asset. See the parent
+specification's electrical domain section for composition strategies.
