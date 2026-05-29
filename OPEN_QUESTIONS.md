@@ -13,7 +13,7 @@ recommendation aligned with the proposal's direction.
 
 | # | Question | Status | Target Version |
 |---|----------|--------|----------------|
-| Q1 | [Base vocabulary scope](#q1-base-vocabulary-scope) | Open | v0.2.0 |
+| Q1 | [Base vocabulary scope](#q1-base-vocabulary-scope) | **Decided** -- preliminary vocabulary scoped | v0.2.0 |
 | Q2 | [Multi-domain connection points](#q2-multi-domain-connection-points-update---may-7-2026) | **Decided** -- Option B (co-located single-domain prims) | v0.2.0 |
 | Q3 | [Connection relationships](#q3-connection-relationships-deferred---april-28-2026) | **Deferred** -- out of scope for v0.2.0 | v0.3.0 |
 | Q4 | [Layer authoring model](#q4-layer-authoring-model-confirmed---april-28-2026) | **Decided** -- separate layer (SHOULD) | v0.2.0 |
